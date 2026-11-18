@@ -7,13 +7,11 @@ use App\Models\Section;
 use App\Services\MasterSheetGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\IReadFilter;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
-
 use RuntimeException;
 use Throwable;
 
@@ -25,7 +23,7 @@ class ClassRecordTestController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | EXTRACT AND GENERATE MASTER SHEET
+    | EXTRACT CLASS RECORDS AND GENERATE MASTER SHEET
     |--------------------------------------------------------------------------
     */
 
@@ -35,11 +33,9 @@ class ClassRecordTestController extends Controller
         MasterSheetGenerator $generator
     ) {
         /*
-        |--------------------------------------------------------------
-        | AUTHORIZATION
-        |--------------------------------------------------------------
-        | Uses the classroom ownership check from your
-        | existing extraction controller.
+        |--------------------------------------------------------------------------
+        | 1. AUTHORIZE THE TEACHER
+        |--------------------------------------------------------------------------
         */
 
         abort_unless(
@@ -50,12 +46,22 @@ class ClassRecordTestController extends Controller
         );
 
         /*
-        |--------------------------------------------------------------
-        | VALIDATION
-        |--------------------------------------------------------------
+        |--------------------------------------------------------------------------
+        | 2. VALIDATE UPLOADED FILES, GRADE, AND SEMESTER
+        |--------------------------------------------------------------------------
         */
 
         $validated = $request->validate([
+
+            'grade_level' => [
+                'required',
+                'in:11,12',
+            ],
+
+            'semester' => [
+                'required',
+                'in:1,2',
+            ],
 
             'class_records' => [
                 'required',
@@ -74,8 +80,23 @@ class ClassRecordTestController extends Controller
 
         ], [
 
+            'grade_level.required' =>
+                'Please select a grade level.',
+
+            'grade_level.in' =>
+                'Grade level must be Grade 11 or Grade 12.',
+
+            'semester.required' =>
+                'Please select a semester.',
+
+            'semester.in' =>
+                'Semester must be First or Second Semester.',
+
             'class_records.required' =>
                 'Please select at least one Class Record.',
+
+            'class_records.min' =>
+                'Upload at least one Class Record.',
 
             'class_records.max' =>
                 'You can upload a maximum of 11 Class Records.',
@@ -89,14 +110,76 @@ class ClassRecordTestController extends Controller
         ]);
 
         /*
-        |--------------------------------------------------------------
-        | EXTRACT CLASS RECORDS
-        |--------------------------------------------------------------
+        |--------------------------------------------------------------------------
+        | 3. GET THE SELECTED GRADE AND SEMESTER
+        |--------------------------------------------------------------------------
+        */
+
+        $gradeLevel = (string) $validated['grade_level'];
+
+        $semesterNumber = (int) $validated['semester'];
+
+        $semesterLabel = $semesterNumber === 1
+            ? 'FIRST SEMESTER'
+            : 'SECOND SEMESTER';
+
+        /*
+        |--------------------------------------------------------------------------
+        | 4. VALIDATE CLASSROOM GRADE
+        |--------------------------------------------------------------------------
+        */
+
+        $section->loadMissing([
+            'schoolYear',
+            'strand',
+        ]);
+
+        if ($gradeLevel !== (string) $section->grade_level) {
+
+            throw ValidationException::withMessages([
+
+                'grade_level' =>
+                    'The selected grade level does not match '
+                    . 'the current classroom.',
+
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 5. VALIDATE SCHOOL YEAR
+        |--------------------------------------------------------------------------
+        */
+
+        $schoolYear = trim(
+            (string) ($section->schoolYear?->name ?? '')
+        );
+
+        if ($schoolYear === '') {
+
+            throw ValidationException::withMessages([
+
+                'grade_level' =>
+                    'This classroom has no assigned school year.',
+
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 6. PREPARE EXTRACTED DATA
+        |--------------------------------------------------------------------------
         */
 
         $allRecords = [];
 
         $failures = [];
+
+        /*
+        |--------------------------------------------------------------------------
+        | 7. PROCESS UPLOADED CLASS RECORDS
+        |--------------------------------------------------------------------------
+        */
 
         foreach ($validated['class_records'] as $index => $file) {
 
@@ -109,15 +192,16 @@ class ClassRecordTestController extends Controller
                 $filePath = $file->getRealPath();
 
                 if (!$filePath) {
+
                     throw new RuntimeException(
                         'Unable to access uploaded file.'
                     );
                 }
 
                 /*
-                |------------------------------------------------------
-                | XLSX READER
-                |------------------------------------------------------
+                |--------------------------------------------------------------------------
+                | 8. CREATE XLSX READER
+                |--------------------------------------------------------------------------
                 */
 
                 $reader = IOFactory::createReader('Xlsx');
@@ -127,8 +211,13 @@ class ClassRecordTestController extends Controller
                     throw new RuntimeException(
                         'Invalid XLSX workbook.'
                     );
-
                 }
+
+                /*
+                |--------------------------------------------------------------------------
+                | 9. VERIFY WORKSHEET
+                |--------------------------------------------------------------------------
+                */
 
                 $worksheetNames = $reader->listWorksheetNames(
                     $filePath
@@ -141,22 +230,21 @@ class ClassRecordTestController extends Controller
                 )) {
 
                     throw new RuntimeException(
-                        'Worksheet "' . self::WORKSHEET .
-                        '" was not found.'
+                        'Worksheet "' . self::WORKSHEET
+                        . '" was not found.'
                     );
-
                 }
 
                 /*
-                |------------------------------------------------------
-                | MEMORY OPTIMIZATION
-                |------------------------------------------------------
+                |--------------------------------------------------------------------------
+                | 10. OPTIMIZE EXCEL MEMORY
+                |--------------------------------------------------------------------------
                 */
 
                 $reader->setReadDataOnly(true);
 
                 $reader->setLoadSheetsOnly([
-                    self::WORKSHEET
+                    self::WORKSHEET,
                 ]);
 
                 $reader->setReadEmptyCells(false);
@@ -164,12 +252,13 @@ class ClassRecordTestController extends Controller
                 $reader->setIncludeCharts(false);
 
                 /*
-                |------------------------------------------------------
-                | LOAD ONLY REQUIRED EXCEL CELLS
-                |------------------------------------------------------
+                |--------------------------------------------------------------------------
+                | 11. LOAD ONLY REQUIRED CELLS
+                |--------------------------------------------------------------------------
                 */
 
                 $reader->setReadFilter(
+
                     new class implements IReadFilter {
 
                         public function readCell(
@@ -178,31 +267,34 @@ class ClassRecordTestController extends Controller
                             string $worksheetName = ''
                         ): bool {
 
-                            $column =
-                                Coordinate::columnIndexFromString(
-                                    $columnAddress
-                                );
+                            $column = Coordinate::columnIndexFromString(
+                                $columnAddress
+                            );
 
-                            // Semester and subject
+                            // Semester and subject: V8:AB9
                             if ($row === 8 || $row === 9) {
+
                                 return $column >= 22 &&
                                        $column <= 28;
                             }
 
-                            // Teacher
+                            // Teacher: I10:R10
                             if ($row === 10) {
+
                                 return $column >= 9 &&
                                        $column <= 18;
                             }
 
-                            // Male student rows
+                            // Male students
                             if ($row >= 13 && $row <= 62) {
+
                                 return $column >= 2 &&
                                        $column <= 21;
                             }
 
-                            // Female student rows
+                            // Female students
                             if ($row >= 64 && $row <= 113) {
+
                                 return $column >= 2 &&
                                        $column <= 21;
                             }
@@ -213,9 +305,9 @@ class ClassRecordTestController extends Controller
                 );
 
                 /*
-                |------------------------------------------------------
-                | LOAD WORKSHEET
-                |------------------------------------------------------
+                |--------------------------------------------------------------------------
+                | 12. LOAD WORKSHEET
+                |--------------------------------------------------------------------------
                 */
 
                 $spreadsheet = $reader->load($filePath);
@@ -229,31 +321,81 @@ class ClassRecordTestController extends Controller
                     throw new RuntimeException(
                         'Unable to load the required worksheet.'
                     );
-
                 }
 
                 /*
-                |------------------------------------------------------
-                | EXTRACT SUBJECT INFORMATION
-                |------------------------------------------------------
+                |--------------------------------------------------------------------------
+                | 13. EXTRACT SEMESTER, SUBJECT, AND TEACHER
+                |--------------------------------------------------------------------------
                 */
 
                 $semester = $this->readRange(
-                    $sheet, 'V', 'AB', 8
+                    $sheet,
+                    'V',
+                    'AB',
+                    8
                 );
 
                 $subject = $this->readRange(
-                    $sheet, 'V', 'AB', 9
+                    $sheet,
+                    'V',
+                    'AB',
+                    9
                 );
 
                 $teacher = $this->readRange(
-                    $sheet, 'I', 'R', 10
+                    $sheet,
+                    'I',
+                    'R',
+                    10
                 );
 
                 /*
-                |------------------------------------------------------
-                | EXTRACT STUDENTS
-                |------------------------------------------------------
+                |--------------------------------------------------------------------------
+                | 14. VERIFY CLASS RECORD SEMESTER
+                |--------------------------------------------------------------------------
+                */
+
+                $rawSemester = trim(
+                    (string) ($semester['value'] ?? '')
+                );
+
+                $detectedSemester = $this->detectSemester(
+                    $rawSemester
+                );
+
+                if (
+                    $rawSemester !== '' &&
+                    $detectedSemester === null
+                ) {
+
+                    throw new RuntimeException(
+                        'Unable to recognize semester "'
+                        . $rawSemester
+                        . '". Check the semester heading in Excel.'
+                    );
+                }
+
+                if (
+                    $detectedSemester !== null &&
+                    $detectedSemester !== $semesterNumber
+                ) {
+
+                    throw new RuntimeException(
+                        'This Class Record belongs to '
+                        . ($detectedSemester === 1
+                            ? 'FIRST SEMESTER'
+                            : 'SECOND SEMESTER')
+                        . ', but you selected '
+                        . $semesterLabel
+                        . '.'
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | 15. EXTRACT MALE STUDENTS
+                |--------------------------------------------------------------------------
                 */
 
                 $maleStudents = $this->extractStudents(
@@ -263,6 +405,12 @@ class ClassRecordTestController extends Controller
                     'Male'
                 );
 
+                /*
+                |--------------------------------------------------------------------------
+                | 16. EXTRACT FEMALE STUDENTS
+                |--------------------------------------------------------------------------
+                */
+
                 $femaleStudents = $this->extractStudents(
                     $sheet,
                     64,
@@ -271,9 +419,9 @@ class ClassRecordTestController extends Controller
                 );
 
                 /*
-                |------------------------------------------------------
-                | SAVE EXTRACTED DATA IN MEMORY
-                |------------------------------------------------------
+                |--------------------------------------------------------------------------
+                | 17. SAVE EXTRACTED DATA
+                |--------------------------------------------------------------------------
                 */
 
                 $allRecords[] = [
@@ -285,7 +433,10 @@ class ClassRecordTestController extends Controller
 
                     'status' => 'SUCCESS',
 
-                    'semester' => $semester['value'],
+                    'worksheet' => self::WORKSHEET,
+
+                    // Use the selected semester consistently.
+                    'semester' => $semesterLabel,
 
                     'subject' => $subject['value'],
 
@@ -307,51 +458,55 @@ class ClassRecordTestController extends Controller
             } finally {
 
                 /*
-                |------------------------------------------------------
-                | FREE EXCEL MEMORY
-                |------------------------------------------------------
+                |--------------------------------------------------------------------------
+                | 18. RELEASE EXCEL MEMORY
+                |--------------------------------------------------------------------------
                 */
 
                 if ($spreadsheet !== null) {
+
                     $spreadsheet->disconnectWorksheets();
                 }
 
                 unset(
                     $spreadsheet,
                     $reader,
-                    $sheet
+                    $sheet,
+                    $maleStudents,
+                    $femaleStudents
                 );
 
                 gc_collect_cycles();
-
             }
         }
 
         /*
-        |--------------------------------------------------------------
-        | STOP IF ANY FILE FAILED
-        |--------------------------------------------------------------
+        |--------------------------------------------------------------------------
+        | 19. STOP IF ANY UPLOAD FAILED
+        |--------------------------------------------------------------------------
         */
 
         if (!empty($failures)) {
 
             throw ValidationException::withMessages([
-                'class_records' => implode(' | ', $failures),
-            ]);
 
+                'class_records' => implode(' | ', $failures),
+
+            ]);
         }
 
         /*
-        |--------------------------------------------------------------
-        | GENERATE MASTER SHEET
-        |--------------------------------------------------------------
+        |--------------------------------------------------------------------------
+        | 20. GENERATE MASTER SHEET
+        |--------------------------------------------------------------------------
         */
 
         try {
 
             $result = $generator->generate(
                 $section,
-                $allRecords
+                $allRecords,
+                $semesterNumber
             );
 
         } catch (ValidationException $exception) {
@@ -365,17 +520,16 @@ class ClassRecordTestController extends Controller
             return back()->withErrors([
 
                 'class_records' =>
-                    'Failed to generate Master Sheet. ' .
-                    'Please check the Laravel error log.',
+                    'Failed to generate Master Sheet. '
+                    . 'Please check the Laravel error log.',
 
             ]);
-
         }
 
         /*
-        |--------------------------------------------------------------
-        | DOWNLOAD GENERATED EXCEL FILE
-        |--------------------------------------------------------------
+        |--------------------------------------------------------------------------
+        | 21. DOWNLOAD GENERATED MASTER SHEET
+        |--------------------------------------------------------------------------
         */
 
         return response()->download(
@@ -388,8 +542,49 @@ class ClassRecordTestController extends Controller
                 'Content-Type' =>
                     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ]
-
         );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DETECT SEMESTER FROM CLASS RECORD
+    |--------------------------------------------------------------------------
+    |
+    | Supports:
+    | FIRST SEMESTER
+    | SECOND SEMESTER
+    | 1ST SEMESTER
+    | 2ND SEMESTER
+    | SEMESTER 1
+    | SEMESTER 2
+    |
+    */
+
+    private function detectSemester(string $value): ?int
+    {
+        $value = strtoupper(trim($value));
+
+        if ($value === '') {
+            return null;
+        }
+
+        if (
+            $value === '1' ||
+            preg_match('/\b(FIRST|1ST)\b/', $value) ||
+            preg_match('/\bSEM(?:ESTER)?\s*[-:]?\s*1\b/', $value)
+        ) {
+            return 1;
+        }
+
+        if (
+            $value === '2' ||
+            preg_match('/\b(SECOND|2ND)\b/', $value) ||
+            preg_match('/\bSEM(?:ESTER)?\s*[-:]?\s*2\b/', $value)
+        ) {
+            return 2;
+        }
+
+        return null;
     }
 
     /*
@@ -410,17 +605,17 @@ class ClassRecordTestController extends Controller
         for ($row = $startRow; $row <= $endRow; $row++) {
 
             $name = $this->readRange(
-                $sheet, 'B', 'E', $row
+                $sheet,
+                'B',
+                'E',
+                $row
             );
 
             $studentName = trim(
                 (string) ($name['value'] ?? '')
             );
 
-            /*
-            | Skip empty student rows.
-            */
-
+            // Skip empty student rows.
             if (
                 $studentName === '' ||
                 $studentName === '0'
@@ -429,19 +624,29 @@ class ClassRecordTestController extends Controller
             }
 
             /*
-            | First Quarter
+            |--------------------------------------------------------------------------
+            | FIRST QUARTER
+            |--------------------------------------------------------------------------
             */
 
             $firstQuarter = $this->readRange(
-                $sheet, 'F', 'M', $row
+                $sheet,
+                'F',
+                'M',
+                $row
             );
 
             /*
-            | Second Quarter
+            |--------------------------------------------------------------------------
+            | SECOND QUARTER
+            |--------------------------------------------------------------------------
             */
 
             $secondQuarter = $this->readRange(
-                $sheet, 'N', 'U', $row
+                $sheet,
+                'N',
+                'U',
+                $row
             );
 
             $students[] = [
@@ -501,18 +706,12 @@ class ClassRecordTestController extends Controller
 
             if (
                 $raw === null ||
-                (
-                    is_string($raw) &&
-                    trim($raw) === ''
-                )
+                (is_string($raw) && trim($raw) === '')
             ) {
                 continue;
             }
 
-            /*
-            | Use cached Excel formula values.
-            */
-
+            // Use cached Excel formula values.
             $value =
                 $cell->getDataType() === DataType::TYPE_FORMULA
                     ? $cell->getOldCalculatedValue()
@@ -528,21 +727,15 @@ class ClassRecordTestController extends Controller
             ) {
 
                 return [
-
                     'value' => $value,
-
                     'source_cell' => $address,
-
                 ];
             }
         }
 
         return [
-
             'value' => null,
-
             'source_cell' => null,
-
         ];
     }
 }

@@ -14,85 +14,60 @@ use Throwable;
 
 class MasterSheetGenerator
 {
-    /*
-    |--------------------------------------------------------------------------
-    | CONFIGURATION
-    |--------------------------------------------------------------------------
-    */
-
     private const MAX_SUBJECTS = 11;
-
     private const TEMPLATE_SUBJECT_SLOTS = 10;
-
     private const ORIGINAL_BOYS = 40;
-
     private const ORIGINAL_GIRLS = 39;
-
-    // Subject 1 starts in column G.
     private const FIRST_SUBJECT_COLUMN = 7;
-
-    // MIN, FIN, AVE, spacer.
     private const SUBJECT_BLOCK_WIDTH = 4;
-
-    /*
-    | IMPORTANT:
-    |
-    | This assumes your original General Average
-    | begins in column AU.
-    |
-    | With 11 subjects, it automatically moves to AY.
-    |
-    | Verify AU in your actual Excel template.
-    */
-
     private const GENERAL_AVERAGE_COLUMN = 'AU';
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | GENERATE MASTER SHEET
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * Generate a Master Sheet for the teacher-selected semester.
+     * Semester: 1 = First Semester, 2 = Second Semester.
+     */
     public function generate(
         Section $section,
-        array $records
+        array $records,
+        int $semesterNumber
     ): array {
-
-        /*
-        |--------------------------------------------------------------
-        | VALIDATE NUMBER OF SUBJECTS
-        |--------------------------------------------------------------
-        */
-
-        if (
-            count($records) < 1 ||
-            count($records) > self::MAX_SUBJECTS
-        ) {
-
+        // Validate the selected semester.
+        if (!in_array($semesterNumber, [1, 2], true)) {
             throw ValidationException::withMessages([
-                'class_records' =>
-                    'Upload between 1 and 11 Class Records.',
+                'semester' => 'Please select First or Second Semester.',
             ]);
         }
 
-        /*
-        |--------------------------------------------------------------
-        | VALIDATE STUDENT NAMES FIRST
-        |--------------------------------------------------------------
-        |
-        | All uploaded Class Records must have
-        | the same student roster.
-        |
-        | If one file has different student names,
-        | generation stops before saving Excel.
-        |
-        */
+        // Validate the number of uploaded class records.
+        if (count($records) < 1 || count($records) > self::MAX_SUBJECTS) {
+            throw ValidationException::withMessages([
+                'class_records' => 'Upload between 1 and 11 Class Records.',
+            ]);
+        }
 
+        // Get the school year assigned to this classroom.
+        $section->loadMissing('schoolYear');
+
+        $schoolYear = trim(
+            (string) ($section->schoolYear?->name ?? '')
+        );
+
+        if ($schoolYear === '') {
+            throw ValidationException::withMessages([
+                'class_records' => 'The classroom has no assigned school year.',
+            ]);
+        }
+
+        // Determine the teacher-selected semester.
+        $semesterLabel = $semesterNumber === 1
+            ? 'FIRST SEMESTER'
+            : 'SECOND SEMESTER';
+
+        // Validate the student roster.
         $students = $this->validateStudentNames($records);
 
+        // Sort student names alphabetically.
         foreach (['Male', 'Female'] as $gender) {
-
             asort(
                 $students[$gender],
                 SORT_NATURAL | SORT_FLAG_CASE
@@ -102,11 +77,10 @@ class MasterSheetGenerator
         $boyCount = count($students['Male']);
         $girlCount = count($students['Female']);
 
-
         /*
-        |--------------------------------------------------------------
+        |--------------------------------------------------------------------------
         | PREPARE SUBJECTS AND GRADES
-        |--------------------------------------------------------------
+        |--------------------------------------------------------------------------
         */
 
         $subjects = [];
@@ -115,7 +89,6 @@ class MasterSheetGenerator
         $expectedSemester = null;
 
         foreach ($records as $index => $record) {
-
             $filename = $record['filename']
                 ?? 'File ' . ($index + 1);
 
@@ -128,41 +101,57 @@ class MasterSheetGenerator
             );
 
             if ($subject === '' || $subject === '0') {
-
                 throw ValidationException::withMessages([
-                    'class_records' =>
-                        "Missing subject name in {$filename}.",
+                    'class_records' => "Missing subject name in {$filename}.",
                 ]);
             }
 
-            $subjectKey = $this->normalize($subject);
-
             /*
-            | Prevent duplicate subjects.
+            |--------------------------------------------------------------------------
+            | VALIDATE DUPLICATE SUBJECTS
+            |--------------------------------------------------------------------------
+            |
+            | ENGLISH 2  != ENGLISH 02
+            | COMPUTER 2 != COMPUTER 02
+            |
             */
 
+            $subjectKey = mb_strtoupper(
+                trim(
+                    preg_replace('/\s+/u', ' ', $subject)
+                    ?? $subject
+                ),
+                'UTF-8'
+            );
+
             if (isset($usedSubjects[$subjectKey])) {
+                $previous = $usedSubjects[$subjectKey];
 
                 throw ValidationException::withMessages([
                     'class_records' =>
-                        "Duplicate subject: {$subject}. " .
-                        'Please upload different subjects.',
+                        "Duplicate subject detected: '{$subject}' "
+                        . "from '{$filename}' matches "
+                        . "'{$previous['subject']}' "
+                        . "from '{$previous['filename']}'.",
                 ]);
             }
 
-            $usedSubjects[$subjectKey] = true;
+            $usedSubjects[$subjectKey] = [
+                'subject' => $subject,
+                'filename' => $filename,
+            ];
 
             /*
-            | Check semester consistency.
+            |--------------------------------------------------------------------------
+            | CHECK SEMESTER CONSISTENCY
+            |--------------------------------------------------------------------------
             */
 
             $semesterKey = $this->normalize($semester);
 
             if ($semesterKey === '') {
-
                 throw ValidationException::withMessages([
-                    'class_records' =>
-                        "Missing semester in {$filename}.",
+                    'class_records' => "Missing semester in {$filename}.",
                 ]);
             }
 
@@ -170,11 +159,9 @@ class MasterSheetGenerator
                 $expectedSemester !== null &&
                 $expectedSemester !== $semesterKey
             ) {
-
                 throw ValidationException::withMessages([
                     'class_records' =>
-                        'The uploaded Class Records belong ' .
-                        'to different semesters.',
+                        'The uploaded Class Records belong to different semesters.',
                 ]);
             }
 
@@ -188,7 +175,9 @@ class MasterSheetGenerator
             ];
 
             /*
-            | Store each student's quarterly grades.
+            |--------------------------------------------------------------------------
+            | EXTRACT STUDENT GRADES
+            |--------------------------------------------------------------------------
             */
 
             foreach ([
@@ -197,7 +186,6 @@ class MasterSheetGenerator
             ] as $field => $gender) {
 
                 foreach (($record[$field] ?? []) as $student) {
-
                     $name = trim(
                         (string) ($student['student_name'] ?? '')
                     );
@@ -209,18 +197,12 @@ class MasterSheetGenerator
                     $key = $this->normalize($name);
 
                     $grades[$index][$gender][$key] = [
-
-                        'min' =>
-                            $student['first_quarter'] ?? null,
-
-                        'fin' =>
-                            $student['second_quarter'] ?? null,
-
+                        'min' => $student['first_quarter'] ?? null,
+                        'fin' => $student['second_quarter'] ?? null,
                     ];
                 }
             }
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -232,39 +214,49 @@ class MasterSheetGenerator
             'app/private/templates/master-class/MasterSheet Template.xlsx'
         );
 
-        if (
-            !is_file($template) ||
-            !is_readable($template)
-        ) {
-
+        if (!is_file($template) || !is_readable($template)) {
             throw ValidationException::withMessages([
                 'class_records' =>
-                    'Master Sheet template not found: ' .
-                    $template,
+                    'Master Sheet template not found: ' . $template,
             ]);
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOAD EXCEL TEMPLATE
-        |--------------------------------------------------------------------------
-        */
 
         $workbook = null;
         $outputPath = null;
 
         try {
 
+            /*
+            |--------------------------------------------------------------------------
+            | LOAD EXCEL TEMPLATE
+            |--------------------------------------------------------------------------
+            */
+
             $reader = IOFactory::createReader('Xlsx');
 
-            // Preserve original styles and formulas.
             $reader->setReadDataOnly(false);
 
             $workbook = $reader->load($template);
 
             $sheet = $workbook->getActiveSheet();
 
+            /*
+            |--------------------------------------------------------------------------
+            | NEW FEATURE: AUTOMATIC WORKSHEET NAME
+            |--------------------------------------------------------------------------
+            |
+            | FIRST SEMESTER  = 1ST-SEM-MIDTERM
+            | SECOND SEMESTER = 2ND-SEM-MIDTERM
+            |
+            | This renames the worksheet tab inside Excel.
+            |
+            */
+
+            $sheetName = $semesterNumber === 1
+                ? '1ST-SEM'
+                : '2ND-SEM';
+
+            $sheet->setTitle($sheetName);
 
             /*
             |--------------------------------------------------------------------------
@@ -278,18 +270,13 @@ class MasterSheetGenerator
             );
 
             if ($extraBoys > 0) {
-
-                $sheet->insertNewRowBefore(
-                    51,
-                    $extraBoys
-                );
+                $sheet->insertNewRowBefore(51, $extraBoys);
 
                 for (
                     $row = 51;
                     $row <= 50 + $extraBoys;
                     $row++
                 ) {
-
                     $this->cloneStudentRow(
                         $sheet,
                         50,
@@ -297,7 +284,6 @@ class MasterSheetGenerator
                     );
                 }
             }
-
 
             /*
             |--------------------------------------------------------------------------
@@ -313,7 +299,6 @@ class MasterSheetGenerator
             );
 
             if ($extraGirls > 0) {
-
                 $insertAt = 91 + $extraBoys;
 
                 $sheet->insertNewRowBefore(
@@ -326,7 +311,6 @@ class MasterSheetGenerator
                     $row < $insertAt + $extraGirls;
                     $row++
                 ) {
-
                     $this->cloneStudentRow(
                         $sheet,
                         90 + $extraBoys,
@@ -334,6 +318,12 @@ class MasterSheetGenerator
                     );
                 }
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | STUDENT ROW POSITIONS
+            |--------------------------------------------------------------------------
+            */
 
             $boyRows = range(
                 11,
@@ -348,25 +338,17 @@ class MasterSheetGenerator
             $lastStudentRow =
                 90 + $extraBoys + $extraGirls;
 
-
             /*
             |--------------------------------------------------------------------------
-            | DYNAMIC SUBJECT COLUMNS
+            | DYNAMIC SUBJECT BLOCKS
             |--------------------------------------------------------------------------
             |
-            | Original 10 subjects:
+            | 10 subjects:
+            | General Average = AU
             |
-            | 10th subject: AQ:AS
-            | Spacer: AT
-            | General Average: AU
-            |
-            | If 11 subjects:
-            |
-            | Insert 4 columns before AU.
-            |
-            | New subject: AU:AW
-            | Spacer: AX
-            | General Average shifts to AY.
+            | 11 subjects:
+            | New subject = AU:AW
+            | General Average = AY
             |
             */
 
@@ -376,13 +358,6 @@ class MasterSheetGenerator
                 $lastStudentRow
             );
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | CALCULATE NEW GENERAL AVERAGE COLUMN
-            |--------------------------------------------------------------------------
-            */
-
             $extraSubjectBlocks = max(
                 0,
                 count($subjects) - self::TEMPLATE_SUBJECT_SLOTS
@@ -390,21 +365,18 @@ class MasterSheetGenerator
 
             $generalAverageColumn =
                 Coordinate::stringFromColumnIndex(
-
                     Coordinate::columnIndexFromString(
                         self::GENERAL_AVERAGE_COLUMN
                     )
-
                     + (
-                        $extraSubjectBlocks *
-                        self::SUBJECT_BLOCK_WIDTH
+                        $extraSubjectBlocks
+                        * self::SUBJECT_BLOCK_WIDTH
                     )
                 );
 
-
             /*
             |--------------------------------------------------------------------------
-            | CLEAR EXISTING STUDENT INPUT CELLS
+            | CLEAR OLD STUDENT INPUT VALUES
             |--------------------------------------------------------------------------
             */
 
@@ -432,13 +404,11 @@ class MasterSheetGenerator
                             $subjectIndex
                         );
 
-                        // MIN
                         $sheet->setCellValue(
                             $this->column($base) . $row,
                             null
                         );
 
-                        // FIN
                         $sheet->setCellValue(
                             $this->column($base + 1) . $row,
                             null
@@ -447,7 +417,6 @@ class MasterSheetGenerator
                 }
             }
 
-
             /*
             |--------------------------------------------------------------------------
             | CLEAR OLD SUBJECT HEADINGS
@@ -455,44 +424,34 @@ class MasterSheetGenerator
             */
 
             for ($i = 0; $i < $slots; $i++) {
-
                 $sheet->setCellValue(
-
                     $this->column(
                         $this->subjectStart($i)
                     ) . '8',
-
                     null
-
                 );
             }
 
-
             /*
             |--------------------------------------------------------------------------
-            | INSERT SUBJECT NAMES
+            | WRITE SUBJECT HEADINGS
             |--------------------------------------------------------------------------
             */
 
             foreach ($subjects as $index => $subject) {
 
                 $sheet->setCellValueExplicit(
-
                     $this->column(
                         $this->subjectStart($index)
                     ) . '8',
-
                     $subject,
-
                     DataType::TYPE_STRING
-
                 );
             }
 
-
             /*
             |--------------------------------------------------------------------------
-            | INSERT STUDENT NAMES AND GRADES
+            | WRITE STUDENTS AND GRADES
             |--------------------------------------------------------------------------
             */
 
@@ -503,15 +462,9 @@ class MasterSheetGenerator
 
                 $position = 0;
 
-                foreach (
-                    $students[$gender] as $key => $name
-                ) {
+                foreach ($students[$gender] as $key => $name) {
 
                     $row = $rows[$position++];
-
-                    /*
-                    | Student name.
-                    */
 
                     $sheet->setCellValueExplicit(
                         'B' . $row,
@@ -521,75 +474,58 @@ class MasterSheetGenerator
 
                     $subjectAverageCells = [];
 
-
                     /*
-                    | INSERT GRADES FOR EACH SUBJECT
+                    |--------------------------------------------------------------------------
+                    | GRADES FOR EACH SUBJECT
+                    |--------------------------------------------------------------------------
                     */
 
-                    foreach (
-                        $subjects as $index => $subject
-                    ) {
+                    foreach ($subjects as $index => $subject) {
 
                         $base = $this->subjectStart($index);
 
-                        $minColumn =
-                            $this->column($base);
+                        $minColumn = $this->column($base);
+                        $finColumn = $this->column($base + 1);
+                        $aveColumn = $this->column($base + 2);
 
-                        $finColumn =
-                            $this->column($base + 1);
+                        $pair = $grades[$index][$gender][$key];
 
-                        $aveColumn =
-                            $this->column($base + 2);
-
-                        $pair =
-                            $grades[$index][$gender][$key];
-
-
-                        /*
-                        | MIN = First Quarter
-                        */
-
+                        // First quarter grade.
                         $this->writeGrade(
                             $sheet,
                             $minColumn . $row,
                             $pair['min']
                         );
 
-
-                        /*
-                        | FIN = Second Quarter
-                        */
-
+                        // Second quarter grade.
                         $this->writeGrade(
                             $sheet,
                             $finColumn . $row,
                             $pair['fin']
                         );
 
-
                         /*
+                        |--------------------------------------------------------------------------
                         | SUBJECT AVERAGE
+                        |--------------------------------------------------------------------------
                         */
 
-                        $averageAddress =
-                            $aveColumn . $row;
+                        $averageAddress = $aveColumn . $row;
 
                         if (
                             !$sheet->getCell(
                                 $averageAddress
                             )->isFormula()
                         ) {
-
-                            $formula =
-                                '=IF(COUNT(' .
-                                $minColumn . $row .
-                                ':' .
-                                $finColumn . $row .
-                                ')<2,"",ROUND(AVERAGE(' .
-                                $minColumn . $row .
-                                ':' .
-                                $finColumn . $row .
-                                '),0))';
+                            $formula = '=IF(COUNT('
+                                . $minColumn . $row
+                                . ':'
+                                . $finColumn . $row
+                                . ')<2,"",ROUND(AVERAGE('
+                                . $minColumn . $row
+                                . ':'
+                                . $finColumn . $row
+                                . '),0))';
 
                             $sheet->setCellValue(
                                 $averageAddress,
@@ -601,23 +537,10 @@ class MasterSheetGenerator
                             $averageAddress;
                     }
 
-
                     /*
                     |--------------------------------------------------------------------------
-                    | DYNAMIC GENERAL AVERAGE FORMULA
+                    | GENERAL AVERAGE
                     |--------------------------------------------------------------------------
-                    |
-                    | Include every uploaded subject's AVE.
-                    |
-                    | For 10 subjects:
-                    | Writes General Average to AU.
-                    |
-                    | For 11 subjects:
-                    | Writes General Average to AY.
-                    |
-                    | Existing General Average formulas in the
-                    | student rows are replaced by this formula.
-                    |
                     */
 
                     $references = implode(
@@ -625,27 +548,22 @@ class MasterSheetGenerator
                         $subjectAverageCells
                     );
 
-                    $generalAverageFormula =
-                        '=IF(COUNT(' .
-                        $references .
-                        ')=0,"",ROUND(AVERAGE(' .
-                        $references .
-                        '),0))';
+                    $generalAverageFormula = '=IF(COUNT('
+                        . $references
+                        . ')=0,"",ROUND(AVERAGE('
+                        . $references
+                        . '),0))';
 
                     $sheet->setCellValue(
-
                         $generalAverageColumn . $row,
-
                         $generalAverageFormula
-
                     );
                 }
             }
 
-
             /*
             |--------------------------------------------------------------------------
-            | CREATE OUTPUT DIRECTORY
+            | CREATE OUTPUT FOLDER
             |--------------------------------------------------------------------------
             */
 
@@ -658,33 +576,52 @@ class MasterSheetGenerator
                 !mkdir($folder, 0775, true) &&
                 !is_dir($folder)
             ) {
-
                 throw new RuntimeException(
                     'Unable to create Master Sheet directory.'
                 );
             }
 
-
             /*
             |--------------------------------------------------------------------------
-            | GENERATE OUTPUT FILENAME
+            | GENERATE FILENAME
             |--------------------------------------------------------------------------
             */
 
-            $filename =
-                'MasterSheet_' .
-                Str::slug((string) $section->name, '_') .
-                '_' .
-                now()->format('Ymd_His') .
-                '_' .
-                Str::random(6) .
-                '.xlsx';
+            $filename = 'MasterSheet_'
+                . Str::slug(
+                    (string) $section->name,
+                    '_'
+                )
+                . '_Sem' . $semesterNumber
+                . '_' . now()->format('Ymd_His')
+                . '_' . Str::random(6)
+                . '.xlsx';
 
-            $outputPath =
-                $folder .
-                DIRECTORY_SEPARATOR .
-                $filename;
+            $outputPath = $folder
+                . DIRECTORY_SEPARATOR
+                . $filename;
 
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE MASTER SHEET HEADER
+            |--------------------------------------------------------------------------
+            |
+            | The header is in merged cells B5:AY5.
+            | Write the semester and school year to B5.
+            |
+            | Example:
+            | SECOND SEMESTER (SY: 2025-2026)
+            |
+            */
+
+            $header = $semesterLabel
+                . ' (SY: ' . $schoolYear . ')';
+
+            $sheet->setCellValueExplicit(
+                'B5',
+                $header,
+                DataType::TYPE_STRING
+            );
 
             /*
             |--------------------------------------------------------------------------
@@ -701,22 +638,19 @@ class MasterSheetGenerator
 
             $writer->save($outputPath);
 
+            /*
+            |--------------------------------------------------------------------------
+            | RETURN GENERATED FILE
+            |--------------------------------------------------------------------------
+            */
 
             return [
-
                 'path' => $outputPath,
-
                 'filename' => $filename,
-
                 'boys' => $boyCount,
-
                 'girls' => $girlCount,
-
                 'subjects' => count($subjects),
-
-                'general_average_column' =>
-                    $generalAverageColumn,
-
+                'general_average_column' => $generalAverageColumn,
             ];
 
         } catch (Throwable $exception) {
@@ -725,7 +659,6 @@ class MasterSheetGenerator
                 $outputPath !== null &&
                 is_file($outputPath)
             ) {
-
                 @unlink($outputPath);
             }
 
@@ -734,30 +667,17 @@ class MasterSheetGenerator
         } finally {
 
             if ($workbook !== null) {
-
                 $workbook->disconnectWorksheets();
-
             }
 
             gc_collect_cycles();
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | INSERT NEW SUBJECT GROUPS
+    | EXPAND SUBJECT BLOCKS
     |--------------------------------------------------------------------------
-    |
-    | This function is the main improvement.
-    |
-    | For subject 11:
-    | - Inserts AU:AX
-    | - Shifts General Average from AU to AY
-    | - Copies Subject 10 formatting
-    | - Copies MIN/FIN/AVE headings
-    | - Copies available AVE formulas
-    |
     */
 
     private function expandSubjectBlocks(
@@ -772,34 +692,18 @@ class MasterSheetGenerator
             $index++
         ) {
 
-            $targetStart = $this->subjectStart(
-                $index
-            );
-
-            $sourceStart = $this->subjectStart(
-                $index - 1
-            );
-
-            $targetColumn = $this->column(
-                $targetStart
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | INSERT BEFORE GENERAL AVERAGE
-            |--------------------------------------------------------------------------
-            */
+            $targetStart = $this->subjectStart($index);
+            $sourceStart = $this->subjectStart($index - 1);
+            $targetColumn = $this->column($targetStart);
 
             $sheet->insertNewColumnBefore(
                 $targetColumn,
                 self::SUBJECT_BLOCK_WIDTH
             );
 
-
             /*
             |--------------------------------------------------------------------------
-            | COPY PREVIOUS SUBJECT FORMATTING
+            | COPY SUBJECT FORMATTING
             |--------------------------------------------------------------------------
             */
 
@@ -817,24 +721,11 @@ class MasterSheetGenerator
                     $targetStart + $offset
                 );
 
-
-                /*
-                | Copy column width.
-                */
-
-                $sheet->getColumnDimension($newColumn)
-                    ->setWidth(
-
-                        $sheet->getColumnDimension(
-                            $sourceColumn
-                        )->getWidth()
-
-                    );
-
-
-                /*
-                | Copy formatting.
-                */
+                $sheet->getColumnDimension($newColumn)->setWidth(
+                    $sheet->getColumnDimension(
+                        $sourceColumn
+                    )->getWidth()
+                );
 
                 for (
                     $row = 1;
@@ -843,22 +734,14 @@ class MasterSheetGenerator
                 ) {
 
                     $from = $sourceColumn . $row;
-
                     $to = $newColumn . $row;
 
                     $sheet->duplicateStyle(
-
                         $sheet->getStyle($from),
-
                         $to
-
                     );
 
-
-                    /*
-                    | Copy MIN / FIN / AVE labels.
-                    */
-
+                    // Copy MIN, FIN and AVE labels.
                     if (
                         ($row === 9 || $row === 10) &&
                         $sheet->cellExists($from)
@@ -875,12 +758,11 @@ class MasterSheetGenerator
 
                         } else {
 
-                            $value =
-                                $sheet->getCell($from)
-                                    ->getValue();
+                            $value = $sheet->getCell(
+                                $from
+                            )->getValue();
 
                             if ($value !== null) {
-
                                 $sheet->setCellValue(
                                     $to,
                                     $value
@@ -889,11 +771,7 @@ class MasterSheetGenerator
                         }
                     }
 
-
-                    /*
-                    | Copy subject AVE formulas.
-                    */
-
+                    // Copy subject-average formulas.
                     if (
                         $offset === 2 &&
                         $row >= 11 &&
@@ -909,21 +787,16 @@ class MasterSheetGenerator
                 }
             }
 
-
             /*
             |--------------------------------------------------------------------------
             | MERGE NEW SUBJECT HEADING
             |--------------------------------------------------------------------------
-            |
-            | Subject 11: AU8:AW8
-            |
             */
 
-            $heading =
-                $this->column($targetStart) .
-                '8:' .
-                $this->column($targetStart + 2) .
-                '8';
+            $heading = $this->column($targetStart)
+                . '8:'
+                . $this->column($targetStart + 2)
+                . '8';
 
             if (
                 !in_array(
@@ -932,16 +805,14 @@ class MasterSheetGenerator
                     true
                 )
             ) {
-
                 $sheet->mergeCells($heading);
             }
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | COPY FORMATTING FOR EXTRA STUDENT ROWS
+    | CLONE STUDENT ROW
     |--------------------------------------------------------------------------
     */
 
@@ -951,13 +822,11 @@ class MasterSheetGenerator
         int $targetRow
     ): void {
 
-        $sheet->getRowDimension($targetRow)
-            ->setRowHeight(
-
-                $sheet->getRowDimension($sourceRow)
-                    ->getRowHeight()
-
-            );
+        $sheet->getRowDimension($targetRow)->setRowHeight(
+            $sheet->getRowDimension(
+                $sourceRow
+            )->getRowHeight()
+        );
 
         for (
             $column = 1;
@@ -968,24 +837,21 @@ class MasterSheetGenerator
             $letter = $this->column($column);
 
             $sheet->duplicateStyle(
-
                 $sheet->getStyle(
                     $letter . $sourceRow
                 ),
-
                 $letter . $targetRow
-
             );
         }
 
-
         /*
-        | Merge student name columns.
+        |--------------------------------------------------------------------------
+        | MERGE STUDENT NAME CELLS
+        |--------------------------------------------------------------------------
         */
 
-        $merged =
-            'B' . $targetRow .
-            ':E' . $targetRow;
+        $merged = 'B' . $targetRow
+            . ':E' . $targetRow;
 
         if (
             !in_array(
@@ -994,13 +860,13 @@ class MasterSheetGenerator
                 true
             )
         ) {
-
             $sheet->mergeCells($merged);
         }
 
-
         /*
-        | Copy subject AVE formulas.
+        |--------------------------------------------------------------------------
+        | COPY SUBJECT AVERAGE FORMULAS
+        |--------------------------------------------------------------------------
         */
 
         for (
@@ -1013,8 +879,7 @@ class MasterSheetGenerator
                 $this->subjectStart($index) + 2
             );
 
-            $from =
-                $aveColumn . $sourceRow;
+            $from = $aveColumn . $sourceRow;
 
             if (
                 $sheet->cellExists($from) &&
@@ -1022,20 +887,16 @@ class MasterSheetGenerator
             ) {
 
                 $sheet->copyFormula(
-
                     $from,
-
                     $aveColumn . $targetRow
-
                 );
             }
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | VALIDATE ALL STUDENT NAMES
+    | VALIDATE STUDENT NAMES
     |--------------------------------------------------------------------------
     */
 
@@ -1047,23 +908,23 @@ class MasterSheetGenerator
             $records[0]
         );
 
-        $referenceFile =
-            $records[0]['filename'] ?? 'First file';
+        $referenceFile = $records[0]['filename']
+            ?? 'First file';
 
         if (
             count($reference['Male']) +
             count($reference['Female']) === 0
         ) {
-
             throw ValidationException::withMessages([
                 'class_records' =>
                     'No students found in the first Class Record.',
             ]);
         }
 
-
         /*
-        | Compare every file against the first file.
+        |--------------------------------------------------------------------------
+        | COMPARE STUDENT ROSTERS
+        |--------------------------------------------------------------------------
         */
 
         foreach ($records as $index => $record) {
@@ -1072,9 +933,7 @@ class MasterSheetGenerator
                 continue;
             }
 
-            $current = $this->studentRoster(
-                $record
-            );
+            $current = $this->studentRoster($record);
 
             foreach (['Male', 'Female'] as $gender) {
 
@@ -1091,20 +950,19 @@ class MasterSheetGenerator
                 if ($missing || $extra) {
 
                     throw ValidationException::withMessages([
-
                         'class_records' =>
-                            'Student roster mismatch in "' .
-                            ($record['filename'] ??
-                                'File ' . ($index + 1)) .
-                            '" (' . $gender .
-                            '), compared with "' .
-                            $referenceFile .
-                            '". Missing: ' .
-                            (implode(', ', $missing) ?: 'none') .
-                            '. Extra: ' .
-                            (implode(', ', $extra) ?: 'none') .
-                            '. No Master Sheet was saved.',
-
+                            'Student roster mismatch in "'
+                            . (
+                                $record['filename']
+                                ?? 'File ' . ($index + 1)
+                            )
+                            . '" (' . $gender
+                            . '), compared with "' . $referenceFile
+                            . '". Missing: '
+                            . (implode(', ', $missing) ?: 'none')
+                            . '. Extra: '
+                            . (implode(', ', $extra) ?: 'none')
+                            . '. No Master Sheet was saved.',
                     ]);
                 }
             }
@@ -1112,7 +970,6 @@ class MasterSheetGenerator
 
         return $reference;
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -1150,28 +1007,36 @@ class MasterSheetGenerator
                     continue;
                 }
 
+                /*
+                |--------------------------------------------------------------------------
+                | CHECK DUPLICATE STUDENT
+                |--------------------------------------------------------------------------
+                */
+
                 if (isset($roster[$gender][$key])) {
 
                     throw ValidationException::withMessages([
                         'class_records' =>
-                            'Duplicate student "' .
-                            $name . '" in ' .
-                            ($record['filename'] ??
-                                'Class Record') . '.',
+                            'Duplicate student "' . $name
+                            . '" in '
+                            . (
+                                $record['filename']
+                                ?? 'Class Record'
+                            )
+                            . '.',
                     ]);
                 }
 
-                $other =
-                    $gender === 'Male'
-                        ? 'Female'
-                        : 'Male';
+                $other = $gender === 'Male'
+                    ? 'Female'
+                    : 'Male';
 
                 if (isset($roster[$other][$key])) {
 
                     throw ValidationException::withMessages([
                         'class_records' =>
-                            'Student "' . $name .
-                            '" appears in both gender lists.',
+                            'Student "' . $name
+                            . '" appears in both gender lists.',
                     ]);
                 }
 
@@ -1182,17 +1047,14 @@ class MasterSheetGenerator
         return $roster;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | NORMALIZE STUDENT NAMES
     |--------------------------------------------------------------------------
     */
 
-    private function normalize(
-        string $name
-    ): string {
-
+    private function normalize(string $name): string
+    {
         $name = mb_strtoupper(
             trim($name),
             'UTF-8'
@@ -1205,41 +1067,33 @@ class MasterSheetGenerator
         ) ?? $name;
 
         return trim(
-            preg_replace('/\s+/u', ' ', $name) ?? $name
+            preg_replace('/\s+/u', ' ', $name)
+            ?? $name
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | GET SUBJECT STARTING COLUMN
+    | SUBJECT STARTING COLUMN
     |--------------------------------------------------------------------------
     */
 
-    private function subjectStart(
-        int $index
-    ): int {
-
+    private function subjectStart(int $index): int
+    {
         return self::FIRST_SUBJECT_COLUMN
             + $index * self::SUBJECT_BLOCK_WIDTH;
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | CONVERT COLUMN INDEX TO EXCEL LETTER
+    | COLUMN NUMBER TO LETTER
     |--------------------------------------------------------------------------
     */
 
-    private function column(
-        int $index
-    ): string {
-
-        return Coordinate::stringFromColumnIndex(
-            $index
-        );
+    private function column(int $index): string
+    {
+        return Coordinate::stringFromColumnIndex($index);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -1261,10 +1115,7 @@ class MasterSheetGenerator
             )
         ) {
 
-            $sheet->setCellValue(
-                $cell,
-                null
-            );
+            $sheet->setCellValue($cell, null);
 
         } elseif (is_numeric($value)) {
 

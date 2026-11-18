@@ -2,78 +2,37 @@
 @extends('layouts.teacher')
 
 @section('title', 'Master Sheets')
+
 @section('breadcrumb', 'My Classrooms / ' . $section->name)
+
 @section('page_heading', 'Master Sheets')
 
 @section('content')
 
 <div class="mx-auto max-w-6xl space-y-6 pb-12">
 
-    <!-- BACK NAVIGATION -->
+    <!-- BACK BUTTON -->
 
-    <div class="flex items-center justify-between gap-3">
+    <a href="{{ route('teacher.classrooms.show', $section) }}"
+       class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-teal-700">
 
-        <a href="{{ route('teacher.classrooms.index') }}"
-           class="inline-flex items-center gap-2 text-sm
-                  font-semibold text-slate-500 transition
-                  hover:text-teal-600">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        Back to Classroom
 
-            <i data-lucide="arrow-left" class="h-4 w-4"></i>
-
-            Back to My Classrooms
-
-        </a>
-
-        <span class="inline-flex items-center gap-2
-                     rounded-full border border-teal-200
-                     bg-teal-50 px-3 py-1.5
-                     text-xs font-bold text-teal-700">
-
-            <span class="h-2 w-2 rounded-full bg-teal-500"></span>
-
-            Teacher Workspace
-
-        </span>
-
-    </div>
+    </a>
 
 
-    <!-- ==========================================
-         CLASSROOM HEADER
-    =========================================== -->
+    <!-- CLASSROOM HEADER -->
 
-    <section class="relative overflow-hidden rounded-3xl
-                    bg-[#142b61] text-white shadow-lg">
+    <section class="overflow-hidden rounded-3xl bg-[#142b61] text-white shadow-lg">
 
-        <!-- DECORATIVE BACKGROUND -->
+        <div class="p-7 md:p-9">
 
-        <div class="pointer-events-none absolute -right-20 -top-28
-                    h-80 w-80 rounded-full border border-white/10">
-        </div>
+            <div class="flex flex-wrap items-center justify-between gap-5">
 
-        <div class="pointer-events-none absolute -right-8 top-10
-                    h-52 w-52 rounded-full bg-white/5">
-        </div>
+                <div class="flex items-center gap-4">
 
-        <div class="pointer-events-none absolute bottom-0 right-24
-                    h-32 w-32 rounded-full bg-teal-400/10 blur-2xl">
-        </div>
-
-
-        <!-- HEADER CONTENT -->
-
-        <div class="relative px-6 py-8 md:px-9 md:py-10">
-
-            <div class="flex flex-col gap-6
-                        sm:flex-row sm:items-start
-                        sm:justify-between">
-
-                <div class="flex items-start gap-4">
-
-                    <div class="flex h-14 w-14 shrink-0
-                                items-center justify-center
-                                rounded-2xl border border-white/15
-                                bg-white/10">
+                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
 
                         <i data-lucide="file-spreadsheet"
                            class="h-7 w-7"></i>
@@ -82,50 +41,30 @@
 
                     <div>
 
-                        <span class="inline-flex items-center
-                                     rounded-full border border-white/15
-                                     bg-white/10 px-3 py-1
-                                     text-[10px] font-bold
-                                     uppercase tracking-widest
-                                     text-blue-100">
-
+                        <span class="text-xs font-bold uppercase tracking-wider text-teal-200">
                             Academic Records
-
                         </span>
 
-                        <h1 class="mt-3 text-2xl font-extrabold
-                                   tracking-tight md:text-3xl">
-
+                        <h1 class="mt-2 text-2xl font-extrabold md:text-3xl">
                             Master Sheets
-
                         </h1>
 
-                        <p class="mt-2 max-w-xl text-sm
-                                  leading-6 text-blue-100">
-
-                            Upload Class Records to automatically
-                            generate a consolidated Master Sheet
-                            containing student names, subjects,
-                            and quarterly grades.
-
+                        <p class="mt-2 max-w-xl text-sm text-blue-100">
+                            Upload Class Records and generate a Master Sheet
+                            with student names, subjects, and grades.
                         </p>
 
                     </div>
 
                 </div>
 
+                <div class="rounded-xl border border-white/15 bg-white/10 px-5 py-4">
 
-                <!-- CLASSROOM BADGE -->
-
-                <div class="self-start rounded-2xl
-                            border border-white/15
-                            bg-white/10 px-5 py-4">
-
-                    <p class="text-[11px] font-medium text-blue-200">
+                    <p class="text-xs text-blue-200">
                         Selected Classroom
                     </p>
 
-                    <p class="mt-1 text-lg font-bold">
+                    <p class="mt-1 font-bold">
                         {{ $section->name }}
                     </p>
 
@@ -138,57 +77,34 @@
 
         <!-- CLASSROOM INFORMATION -->
 
-        <div class="relative grid grid-cols-2 gap-5
-                    border-t border-white/10
-                    bg-black/10 px-6 py-6
-                    md:grid-cols-4 md:px-9">
+        <div class="grid grid-cols-2 gap-5 border-t border-white/10 bg-black/10 p-6 md:grid-cols-4 md:px-9">
 
             <div>
-
-                <p class="text-[11px] font-medium text-blue-200">
-                    Grade Level
-                </p>
-
+                <p class="text-xs text-blue-200">Grade Level</p>
                 <p class="mt-1 text-sm font-bold">
                     Grade {{ $section->grade_level }}
                 </p>
-
             </div>
 
             <div>
-
-                <p class="text-[11px] font-medium text-blue-200">
-                    Strand
-                </p>
-
+                <p class="text-xs text-blue-200">Strand</p>
                 <p class="mt-1 text-sm font-bold">
                     {{ $section->strand?->code ?? 'N/A' }}
                 </p>
-
             </div>
 
             <div>
-
-                <p class="text-[11px] font-medium text-blue-200">
-                    School Year
-                </p>
-
+                <p class="text-xs text-blue-200">School Year</p>
                 <p class="mt-1 text-sm font-bold">
                     {{ $section->schoolYear?->name ?? 'N/A' }}
                 </p>
-
             </div>
 
             <div>
-
-                <p class="text-[11px] font-medium text-blue-200">
-                    Class Adviser
-                </p>
-
-                <p class="mt-1 break-words text-sm font-bold">
+                <p class="text-xs text-blue-200">Class Adviser</p>
+                <p class="mt-1 text-sm font-bold">
                     {{ $section->adviser?->teacher?->name ?? auth()->user()->name }}
                 </p>
-
             </div>
 
         </div>
@@ -196,28 +112,24 @@
     </section>
 
 
-    <!-- ==========================================
-         LARAVEL VALIDATION ERRORS
-    =========================================== -->
+    <!-- LARAVEL ERRORS -->
 
     @if($errors->any())
 
-        <div class="rounded-2xl border border-red-200
-                    bg-red-50 p-5">
+        <div class="rounded-2xl border border-red-200 bg-red-50 p-5">
 
             <div class="flex items-start gap-3">
 
                 <i data-lucide="alert-circle"
-                   class="mt-0.5 h-5 w-5 shrink-0 text-red-600"></i>
+                   class="h-5 w-5 shrink-0 text-red-600"></i>
 
                 <div>
 
-                    <h3 class="text-sm font-bold text-red-800">
-                        Upload Failed
+                    <h3 class="text-sm font-extrabold text-red-800">
+                        Unable to Generate Master Sheet
                     </h3>
 
-                    <ul class="mt-2 list-disc space-y-1
-                               pl-4 text-xs text-red-700">
+                    <ul class="mt-2 list-disc space-y-1 pl-4 text-sm text-red-700">
 
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -234,178 +146,289 @@
     @endif
 
 
-    <!-- ==========================================
-         UPLOAD FORM
-    =========================================== -->
+    <!-- ===================================================
+         MASTER SHEET UPLOAD FORM
+         ALL FIELDS ARE INSIDE THIS FORM
+    ==================================================== -->
 
-    <form id="uploadForm"
-          action="{{ route('teacher.classrooms.master-sheets.test-extract', $section) }}"
-          method="POST"
-          enctype="multipart/form-data"
-          class="overflow-hidden rounded-3xl
-                 border border-slate-200 bg-white shadow-sm">
+    <form
+        id="uploadForm"
+        action="{{ route('teacher.classrooms.master-sheets.test-extract', $section) }}"
+        method="POST"
+        enctype="multipart/form-data"
+        class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
 
         @csrf
 
 
         <!-- FORM HEADER -->
 
-        <div class="flex flex-wrap items-center
-                    justify-between gap-4
-                    border-b border-slate-100
-                    px-6 py-6 md:px-8">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 px-6 py-6 md:px-8">
 
             <div class="flex items-center gap-4">
 
-                <div class="flex h-12 w-12 shrink-0
-                            items-center justify-center
-                            rounded-2xl bg-teal-50 text-teal-600">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
 
-                    <i data-lucide="cloud-upload"
-                       class="h-6 w-6"></i>
+                    <i data-lucide="cloud-upload" class="h-6 w-6"></i>
 
                 </div>
 
                 <div>
 
                     <h2 class="text-lg font-extrabold text-slate-900">
-                        Upload Class Records
+                        Generate Master Sheet
                     </h2>
 
                     <p class="mt-1 text-xs text-slate-500">
-                        Select the Excel files for your subjects.
+                        Select the grade and semester, then upload your Class Records.
                     </p>
 
                 </div>
 
             </div>
 
-            <!-- FILE COUNTER -->
+            <div class="rounded-xl bg-slate-50 px-4 py-3">
 
-            <div class="rounded-xl border border-slate-200
-                        bg-slate-50 px-4 py-2.5">
+                <span id="fileCount"
+                      class="text-sm font-extrabold text-teal-700">
+                    0 / 11
+                </span>
 
-                <div class="flex items-center gap-2">
-
-                    <i data-lucide="files"
-                       class="h-4 w-4 text-teal-600"></i>
-
-                    <span id="fileCount"
-                          class="text-sm font-extrabold text-slate-800">
-                        0 / 11
-                    </span>
-
-                    <span class="text-xs text-slate-500">
-                        Files
-                    </span>
-
-                </div>
+                <span class="ml-1 text-xs text-slate-500">
+                    Files
+                </span>
 
             </div>
 
         </div>
 
 
-        <!-- UPLOAD CONTENT -->
-
         <div class="space-y-7 p-6 md:p-8">
 
 
-            <!-- HIDDEN FILE INPUT -->
+            <!-- ===========================================
+                 ACADEMIC INFORMATION
+                 IMPORTANT: INSIDE FORM
+            ============================================ -->
 
-            <input type="file"
-                   id="classRecords"
-                   name="class_records[]"
-                   accept=".xlsx"
-                   multiple
-                   class="sr-only">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 md:p-6">
 
+                <div class="mb-5">
 
-            <!-- DRAG AND DROP AREA -->
+                    <h3 class="flex items-center gap-2 text-sm font-extrabold text-slate-900">
 
-            <label for="classRecords"
-                   id="dropzone"
-                   role="button"
-                   tabindex="0"
-                   class="group relative flex cursor-pointer
-                          flex-col items-center justify-center
-                          rounded-2xl border-2 border-dashed
-                          border-slate-300 bg-slate-50/70
-                          px-5 py-12 text-center
-                          transition-all duration-200
-                          hover:border-teal-400 hover:bg-teal-50/50
-                          focus:outline-none focus:ring-2
-                          focus:ring-teal-500 focus:ring-offset-2">
+                        <i data-lucide="graduation-cap"
+                           class="h-5 w-5 text-teal-700"></i>
 
-                <div class="mb-5 flex h-20 w-20
-                            items-center justify-center
-                            rounded-2xl bg-white
-                            text-teal-600 shadow-sm
-                            ring-1 ring-slate-100
-                            transition-transform duration-200
-                            group-hover:-translate-y-1">
+                        Academic Information
 
-                    <i data-lucide="file-up"
-                       class="h-10 w-10"></i>
+                    </h3>
+
+                    <p class="mt-1 text-xs text-slate-500">
+                        These details will be used when generating the Excel Master Sheet.
+                    </p>
 
                 </div>
 
-                <h3 class="text-base font-extrabold
-                           text-slate-800 md:text-lg">
 
-                    Drag & Drop Class Records Here
+                <div class="grid gap-5 md:grid-cols-2">
 
-                </h3>
 
-                <p class="mt-2 text-sm text-slate-500">
-                    Or browse files from your computer
-                </p>
+                    <!-- GRADE LEVEL -->
 
-                <span class="mt-5 inline-flex items-center gap-2
-                             rounded-xl bg-teal-600 px-6 py-3
-                             text-sm font-bold text-white
-                             shadow-sm transition
-                             group-hover:bg-teal-700">
+                    <div>
 
-                    <i data-lucide="folder-open"
-                       class="h-4 w-4"></i>
+                        <label
+                            for="grade_level"
+                            class="mb-2 block text-xs font-bold text-slate-700">
 
-                    Choose Excel Files
+                            Grade Level
 
-                </span>
+                        </label>
 
-                <div class="mt-6 flex flex-wrap
-                            items-center justify-center gap-3">
+                        <select
+                            id="grade_level"
+                            name="grade_level"
+                            required
+                            class="w-full cursor-pointer rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100">
 
-                    <span class="rounded-lg bg-white px-3 py-1.5
-                                 text-[11px] font-semibold text-slate-500
-                                 ring-1 ring-slate-200">
-                        XLSX Format
-                    </span>
+                            <option value="11"
+                                @selected((string) old('grade_level', $section->grade_level) === '11')>
+                                Grade 11
+                            </option>
 
-                    <span class="rounded-lg bg-white px-3 py-1.5
-                                 text-[11px] font-semibold text-slate-500
-                                 ring-1 ring-slate-200">
-                        1–11 Files
-                    </span>
+                            <option value="12"
+                                @selected((string) old('grade_level', $section->grade_level) === '12')>
+                                Grade 12
+                            </option>
 
-                    <span class="rounded-lg bg-white px-3 py-1.5
-                                 text-[11px] font-semibold text-slate-500
-                                 ring-1 ring-slate-200">
-                        15 MB Each
-                    </span>
+                        </select>
+
+                        <p class="mt-2 text-xs text-slate-500">
+                            Must match the selected classroom.
+                        </p>
+
+                    </div>
+
+
+                    <!-- SEMESTER -->
+
+                    <div>
+
+                        <label
+                            for="semester"
+                            class="mb-2 block text-xs font-bold text-slate-700">
+
+                            Semester
+
+                        </label>
+
+                        <select
+                            id="semester"
+                            name="semester"
+                            required
+                            class="w-full cursor-pointer rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-sm font-semibold text-slate-700 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100">
+
+                            <option value="" disabled
+                                @selected(old('semester', '') === '')>
+                                Select Semester
+                            </option>
+
+                            <option value="1"
+                                @selected((string) old('semester') === '1')>
+                                First Semester
+                            </option>
+
+                            <option value="2"
+                                @selected((string) old('semester') === '2')>
+                                Second Semester
+                            </option>
+
+                        </select>
+
+                        <p class="mt-2 text-xs text-slate-500">
+                            Uploaded Class Records must belong to this semester.
+                        </p>
+
+                    </div>
 
                 </div>
 
-            </label>
+
+                <!-- SCHOOL YEAR DISPLAY -->
+
+                <div class="mt-5 flex items-center gap-3 rounded-xl border border-teal-100 bg-white p-4">
+
+                    <i data-lucide="calendar-days"
+                       class="h-5 w-5 text-teal-700"></i>
+
+                    <div>
+
+                        <p class="text-xs font-bold text-slate-700">
+                            School Year
+                        </p>
+
+                        <p class="mt-1 text-sm font-semibold text-slate-600">
+                            {{ $section->schoolYear?->name ?? 'Not Assigned' }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
 
 
-            <!-- FILE SELECTION CAPACITY -->
+            <!-- ===========================================
+                 CLASS RECORD UPLOAD
+            ============================================ -->
 
             <div>
 
-                <div class="mb-3 flex items-center
-                            justify-between gap-3">
+                <div class="mb-4">
+
+                    <h3 class="text-sm font-extrabold text-slate-900">
+                        Upload Class Records
+                    </h3>
+
+                    <p class="mt-1 text-xs text-slate-500">
+                        Add 1 to 11 Excel Class Records.
+                    </p>
+
+                </div>
+
+
+                <!-- FILE INPUT -->
+
+                <input
+                    id="classRecords"
+                    name="class_records[]"
+                    type="file"
+                    accept=".xlsx"
+                    multiple
+                    class="sr-only">
+
+
+                <!-- DROPZONE -->
+
+                <div
+                    id="dropzone"
+                    role="button"
+                    tabindex="0"
+                    class="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 py-12 text-center transition hover:border-teal-500 hover:bg-teal-50">
+
+                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-teal-700 shadow-sm">
+
+                        <i data-lucide="files" class="h-8 w-8"></i>
+
+                    </div>
+
+                    <h3 class="mt-5 text-base font-extrabold text-slate-800">
+                        Drag & Drop Class Records Here
+                    </h3>
+
+                    <p class="mt-2 text-sm text-slate-500">
+                        Or choose Excel files from your computer.
+                    </p>
+
+                    <button
+                        id="chooseFilesButton"
+                        type="button"
+                        class="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-teal-700 px-6 py-3 text-sm font-bold text-white transition hover:bg-teal-800">
+
+                        <i data-lucide="folder-open" class="h-4 w-4"></i>
+
+                        Choose Excel Files
+
+                    </button>
+
+
+                    <div class="mt-5 flex flex-wrap justify-center gap-2">
+
+                        <span class="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-500">
+                            XLSX Format
+                        </span>
+
+                        <span class="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-500">
+                            Maximum 11 Files
+                        </span>
+
+                        <span class="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-500">
+                            15 MB Each
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- SELECTION STATUS -->
+
+            <div>
+
+                <div class="mb-3 flex items-center justify-between gap-3">
 
                     <div>
 
@@ -427,19 +450,14 @@
 
                 </div>
 
-                <div class="h-2.5 overflow-hidden
-                            rounded-full bg-slate-100">
+                <div class="h-2.5 overflow-hidden rounded-full bg-slate-100">
 
-                    <div id="selectionProgress"
-                         class="h-full w-0 rounded-full
-                                bg-teal-500 transition-all duration-300">
+                    <div
+                        id="selectionProgress"
+                        class="h-full w-0 rounded-full bg-teal-500 transition-all duration-300">
                     </div>
 
                 </div>
-
-                <p class="mt-2 text-[11px] text-slate-400">
-                    File selection capacity, not upload progress.
-                </p>
 
             </div>
 
@@ -448,30 +466,18 @@
 
             <div id="selectedSection" class="hidden">
 
-                <div class="mb-4 flex flex-wrap
-                            items-center justify-between gap-3">
+                <div class="mb-4 flex items-center justify-between gap-3">
 
-                    <div>
+                    <h3 class="text-sm font-extrabold text-slate-800">
+                        Selected Class Records
+                    </h3>
 
-                        <h3 class="text-sm font-extrabold text-slate-800">
-                            Selected Class Records
-                        </h3>
+                    <button
+                        id="clearFiles"
+                        type="button"
+                        class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50">
 
-                        <p class="mt-1 text-xs text-slate-500">
-                            Review the Excel files before generation.
-                        </p>
-
-                    </div>
-
-                    <button id="clearFiles"
-                            type="button"
-                            class="inline-flex items-center gap-2
-                                   rounded-lg px-3 py-2 text-xs
-                                   font-bold text-red-600
-                                   transition hover:bg-red-50">
-
-                        <i data-lucide="trash-2"
-                           class="h-4 w-4"></i>
+                        <i data-lucide="trash-2" class="h-4 w-4"></i>
 
                         Clear All
 
@@ -479,40 +485,30 @@
 
                 </div>
 
-                <div id="fileList"
-                     class="grid gap-3 sm:grid-cols-2">
-                </div>
+                <div id="fileList" class="grid gap-3 sm:grid-cols-2"></div>
 
             </div>
 
 
-            <!-- UPLOAD ERROR -->
+            <!-- JAVASCRIPT ERROR MESSAGE -->
 
-            <div id="fileError"
-                 role="alert"
-                 aria-live="assertive"
-                 class="hidden rounded-xl border border-red-200
-                        bg-red-50 px-4 py-3
-                        text-sm font-medium text-red-700">
+            <div
+                id="fileError"
+                role="alert"
+                aria-live="assertive"
+                class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             </div>
 
 
-            <!-- FORM FOOTER -->
+            <!-- FOOTER -->
 
-            <div class="flex flex-col gap-5
-                        border-t border-slate-100 pt-6
-                        sm:flex-row sm:items-center
-                        sm:justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-5 border-t border-slate-100 pt-6">
 
                 <div class="flex items-start gap-3">
 
-                    <div class="flex h-9 w-9 shrink-0
-                                items-center justify-center
-                                rounded-xl bg-emerald-50
-                                text-emerald-600">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
 
-                        <i data-lucide="shield-check"
-                           class="h-5 w-5"></i>
+                        <i data-lucide="shield-check" class="h-5 w-5"></i>
 
                     </div>
 
@@ -522,12 +518,8 @@
                             Automatic Excel Generation
                         </p>
 
-                        <p class="mt-1 text-[11px]
-                                  leading-5 text-slate-500">
-
-                            Uses the Final Semestral Grade
-                            worksheet from each Class Record.
-
+                        <p class="mt-1 text-xs text-slate-500">
+                            Uses the Final Semestral Grade worksheet.
                         </p>
 
                     </div>
@@ -537,28 +529,18 @@
 
                 <!-- GENERATE BUTTON -->
 
-                <button id="extractButton"
-                        type="submit"
-                        disabled
-                        class="inline-flex min-h-12 items-center
-                               justify-center gap-2 rounded-xl
-                               bg-[#0d9488] px-7 py-3
-                               text-sm font-bold text-white
-                               shadow-sm transition-all
-                               hover:bg-[#0f766e]
-                               hover:shadow-md
-                               disabled:cursor-not-allowed
-                               disabled:opacity-40">
+                <button
+                    id="extractButton"
+                    type="submit"
+                    class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#0d9488] px-7 py-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#0f766e] disabled:cursor-not-allowed disabled:opacity-50">
 
-                    <i data-lucide="file-spreadsheet"
-                       class="h-5 w-5"></i>
+                    <i data-lucide="file-spreadsheet" class="h-5 w-5"></i>
 
                     <span id="buttonText">
                         Generate & Download Master Sheet
                     </span>
 
-                    <i data-lucide="arrow-right"
-                       class="h-4 w-4"></i>
+                    <i data-lucide="arrow-right" class="h-4 w-4"></i>
 
                 </button>
 
@@ -571,86 +553,61 @@
 </div>
 
 
-<!-- ==========================================
-     GENERATION LOADING OVERLAY
-=========================================== -->
+<!-- ===================================================
+     GENERATION PROGRESS OVERLAY
+==================================================== -->
 
-<div id="processingOverlay"
-     role="dialog"
-     aria-modal="true"
-     aria-labelledby="processingTitle"
-     aria-describedby="processingDescription"
-     tabindex="-1"
-     class="fixed inset-0 z-[9999] hidden
-            items-center justify-center
-            bg-slate-950/65 px-4 backdrop-blur-sm">
+<div
+    id="processingOverlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="processingTitle"
+    tabindex="-1"
+    class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/65 px-4">
 
-    <div class="w-full max-w-md overflow-hidden
-                rounded-3xl bg-white shadow-2xl">
+    <div class="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
 
-        <!-- LOADING HEADER -->
+        <div class="bg-[#142b61] px-7 py-8 text-center text-white">
 
-        <div class="relative overflow-hidden
-                    bg-[#142b61] px-7 py-8 text-center">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-white/10">
 
-            <div class="pointer-events-none absolute
-                        -right-10 -top-10 h-40 w-40
-                        rounded-full bg-white/5">
-            </div>
-
-            <div class="relative mx-auto flex h-16 w-16
-                        items-center justify-center
-                        rounded-2xl border border-white/10
-                        bg-white/10">
-
-                <i data-lucide="file-spreadsheet"
-                   class="h-9 w-9 text-teal-300"></i>
+                <i data-lucide="file-spreadsheet" class="h-8 w-8"></i>
 
             </div>
 
-            <h2 id="processingTitle"
-                class="relative mt-5 text-xl
-                       font-extrabold text-white">
+            <h2
+                id="processingTitle"
+                class="mt-5 text-xl font-extrabold">
 
                 Generating Master Sheet
 
             </h2>
 
-            <p class="relative mt-2 text-xs text-blue-200">
-                Processing your academic records
+            <p class="mt-2 text-xs text-blue-200">
+                Processing academic records
             </p>
 
         </div>
 
 
-        <!-- LOADING BODY -->
+        <div class="space-y-5 p-7">
 
-        <div class="space-y-6 px-7 py-7">
+            <div class="flex items-center justify-between">
 
-            <!-- STATUS AND PERCENTAGE -->
+                <p
+                    id="processingStage"
+                    class="text-sm font-bold text-slate-800">
 
-            <div class="flex items-center
-                        justify-between gap-3">
+                    Uploading Class Records...
 
-                <div class="flex items-center gap-2">
+                </p>
 
-                    <span id="processingDot"
-                          class="h-2.5 w-2.5
-                                 animate-pulse rounded-full
-                                 bg-teal-500">
-                    </span>
+                <span
+                    id="processingPercent"
+                    class="text-sm font-extrabold text-teal-700">
 
-                    <p id="processingStage"
-                       class="text-sm font-bold text-slate-800">
-                        Uploading Class Records...
-                    </p>
-
-                </div>
-
-                <span id="processingPercent"
-                      class="text-sm font-extrabold
-                             text-teal-600 tabular-nums">
                     0%
+
                 </span>
 
             </div>
@@ -658,85 +615,44 @@
 
             <!-- PROGRESS BAR -->
 
-            <div id="processingTrack"
-                 role="progressbar"
-                 aria-label="Master Sheet upload progress"
-                 aria-valuemin="0"
-                 aria-valuemax="100"
-                 aria-valuenow="0"
-                 class="relative h-3 overflow-hidden
-                        rounded-full bg-slate-100">
+            <div class="relative h-3 overflow-hidden rounded-full bg-slate-100">
 
-                <!-- ACTUAL UPLOAD PERCENTAGE -->
-
-                <div id="uploadProgressBar"
-                     class="h-full rounded-full
-                            bg-gradient-to-r
-                            from-teal-500 to-emerald-400
-                            transition-all duration-200"
-                     style="width:0%">
+                <div
+                    id="uploadProgressBar"
+                    class="h-full w-0 rounded-full bg-teal-500 transition-all duration-200">
                 </div>
 
-                <!-- INDETERMINATE EXCEL PROCESSING -->
-
-                <div id="serverProgressBar"
-                     class="master-processing-bar
-                            absolute inset-y-0 left-0
-                            hidden w-1/3 rounded-full
-                            bg-gradient-to-r
-                            from-teal-500 to-emerald-400">
+                <div
+                    id="serverProgressBar"
+                    class="master-processing-bar absolute inset-y-0 left-0 hidden w-1/3 rounded-full bg-teal-500">
                 </div>
 
             </div>
 
 
-            <!-- DESCRIPTION -->
-
-            <p id="processingDescription"
-               class="min-h-12 text-center text-xs
-                      leading-6 text-slate-500">
+            <p
+                id="processingDescription"
+                class="text-center text-xs leading-6 text-slate-500">
 
                 Preparing your Excel files...
 
             </p>
 
 
-            <!-- FILE STATUS -->
+            <p
+                id="processingFileCount"
+                class="rounded-xl bg-slate-50 p-3 text-center text-xs font-semibold text-slate-600">
 
-            <div class="flex items-center
-                        justify-center gap-2
-                        rounded-xl bg-slate-50 px-4 py-3">
+                Preparing files...
 
-                <i data-lucide="files"
-                   class="h-4 w-4 text-teal-600"></i>
-
-                <span id="processingFileCount"
-                      class="text-xs font-semibold
-                             text-slate-600">
-                    Preparing files...
-                </span>
-
-            </div>
+            </p>
 
 
-            <!-- FOOTER -->
+            <p class="border-t border-slate-100 pt-4 text-center text-xs text-slate-400">
 
-            <div class="flex items-center
-                        justify-center gap-2
-                        border-t border-slate-100 pt-5">
+                Your original Excel templates will not be modified.
 
-                <i data-lucide="shield-check"
-                   class="h-4 w-4 text-emerald-600"></i>
-
-                <span class="text-[11px]
-                             text-slate-500">
-
-                    Your original Excel template
-                    will not be modified.
-
-                </span>
-
-            </div>
+            </p>
 
         </div>
 
@@ -745,14 +661,12 @@
 </div>
 
 
-<!-- ==========================================
-     LOADING ANIMATION
-=========================================== -->
+<!-- ===================================================
+     PROGRESS ANIMATION
+==================================================== -->
 
 <style>
-
 @keyframes masterSheetProcessing {
-
     0% {
         transform: translateX(-110%);
     }
@@ -760,101 +674,67 @@
     100% {
         transform: translateX(310%);
     }
-
 }
 
 .master-processing-bar {
-    animation: masterSheetProcessing
-        1.3s ease-in-out infinite;
+    animation: masterSheetProcessing 1.3s ease-in-out infinite;
 }
-
-@media (prefers-reduced-motion: reduce) {
-
-    .master-processing-bar {
-        animation-duration: 3s;
-    }
-
-}
-
 </style>
 
 
-<!-- ==========================================
+<!-- ===================================================
      JAVASCRIPT
-=========================================== -->
+==================================================== -->
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | ELEMENTS
-    |--------------------------------------------------------------------------
-    */
+    const form = document.getElementById('uploadForm');
 
     const input = document.getElementById('classRecords');
+
     const dropzone = document.getElementById('dropzone');
 
-    const form = document.getElementById('uploadForm');
-    const button = document.getElementById('extractButton');
+    const chooseButton = document.getElementById('chooseFilesButton');
+
+    const gradeSelect = document.getElementById('grade_level');
+
+    const semesterSelect = document.getElementById('semester');
+
+    const generateButton = document.getElementById('extractButton');
+
     const buttonText = document.getElementById('buttonText');
 
-    const fileList = document.getElementById('fileList');
     const fileCount = document.getElementById('fileCount');
+
+    const fileList = document.getElementById('fileList');
+
     const selectedSection = document.getElementById('selectedSection');
 
     const clearButton = document.getElementById('clearFiles');
-    const errorBox = document.getElementById('fileError');
 
-    const selectionProgress =
-        document.getElementById('selectionProgress');
+    const selectionProgress = document.getElementById('selectionProgress');
 
-    const selectionPercentage =
-        document.getElementById('selectionPercentage');
+    const selectionPercentage = document.getElementById('selectionPercentage');
 
-    const selectionStatus =
-        document.getElementById('selectionStatus');
+    const selectionStatus = document.getElementById('selectionStatus');
 
+    const fileError = document.getElementById('fileError');
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOADING OVERLAY ELEMENTS
-    |--------------------------------------------------------------------------
-    */
+    const processingOverlay = document.getElementById('processingOverlay');
 
-    const processingOverlay =
-        document.getElementById('processingOverlay');
+    const processingStage = document.getElementById('processingStage');
 
-    const processingStage =
-        document.getElementById('processingStage');
+    const processingPercent = document.getElementById('processingPercent');
 
-    const processingPercent =
-        document.getElementById('processingPercent');
+    const processingDescription = document.getElementById('processingDescription');
 
-    const processingDescription =
-        document.getElementById('processingDescription');
+    const processingFileCount = document.getElementById('processingFileCount');
 
-    const processingFileCount =
-        document.getElementById('processingFileCount');
+    const uploadProgressBar = document.getElementById('uploadProgressBar');
 
-    const processingDot =
-        document.getElementById('processingDot');
+    const serverProgressBar = document.getElementById('serverProgressBar');
 
-    const processingTrack =
-        document.getElementById('processingTrack');
-
-    const uploadProgressBar =
-        document.getElementById('uploadProgressBar');
-
-    const serverProgressBar =
-        document.getElementById('serverProgressBar');
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CONFIGURATION
-    |--------------------------------------------------------------------------
-    */
 
     const MAX_FILES = 11;
 
@@ -866,34 +746,43 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let isGenerating = false;
 
-    let previousBodyOverflow = '';
-
 
     /*
     |--------------------------------------------------------------------------
-    | SHOW ERROR
+    | REFRESH ICONS
     |--------------------------------------------------------------------------
     */
 
-    function showError(message) {
+    function refreshIcons() {
 
-        errorBox.textContent = message;
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
 
-        errorBox.classList.remove('hidden');
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | HIDE ERROR
+    | ERROR HANDLING
     |--------------------------------------------------------------------------
     */
 
+    function showError(message) {
+
+        fileError.textContent = message;
+
+        fileError.classList.remove('hidden');
+
+    }
+
+
     function hideError() {
 
-        errorBox.textContent = '';
+        fileError.textContent = '';
 
-        errorBox.classList.add('hidden');
+        fileError.classList.add('hidden');
+
     }
 
 
@@ -905,62 +794,59 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function formatSize(bytes) {
 
-        return (
-            bytes / (1024 * 1024)
-        ).toFixed(2) + ' MB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | REFRESH LUCIDE ICONS
+    | CHOOSE EXCEL FILES
     |--------------------------------------------------------------------------
     */
 
-    function refreshIcons() {
+    chooseButton.addEventListener('click', function (event) {
 
-        if (window.lucide) {
-            window.lucide.createIcons();
+        event.stopPropagation();
+
+        if (!isGenerating) {
+            input.click();
         }
-    }
+
+    });
+
+
+    dropzone.addEventListener('click', function () {
+
+        if (!isGenerating) {
+            input.click();
+        }
+
+    });
+
+
+    dropzone.addEventListener('keydown', function (event) {
+
+        if (event.target !== dropzone) {
+            return;
+        }
+
+        if (event.key === 'Enter' || event.key === ' ') {
+
+            event.preventDefault();
+
+            if (!isGenerating) {
+                input.click();
+            }
+
+        }
+
+    });
 
 
     /*
     |--------------------------------------------------------------------------
-    | SYNCHRONIZE FILE INPUT
-    |--------------------------------------------------------------------------
-    |
-    | This ensures all selected files are
-    | included in the FormData sent to Laravel.
-    |
-    */
-
-    function syncInput() {
-
-        try {
-
-            const transfer = new DataTransfer();
-
-            records.forEach(function (record) {
-
-                transfer.items.add(record.file);
-
-            });
-
-            input.files = transfer.files;
-
-            return input.files.length === records.length;
-
-        } catch (error) {
-
-            return false;
-        }
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ADD EXCEL FILES
+    | ADD SELECTED FILES
     |--------------------------------------------------------------------------
     */
 
@@ -970,18 +856,13 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const selected = Array.from(files);
+        hideError();
 
         const errors = [];
 
-        hideError();
+        for (const file of Array.from(files)) {
 
-        for (const file of selected) {
-
-            /*
-            | XLSX FORMAT ONLY
-            */
-
+            // XLSX only
             if (!/\.xlsx$/i.test(file.name)) {
 
                 errors.push(
@@ -991,29 +872,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 continue;
             }
 
-
-            /*
-            | FILE SIZE VALIDATION
-            */
-
-            if (
-                file.size === 0 ||
-                file.size > MAX_SIZE
-            ) {
+            // File size
+            if (file.size === 0 || file.size > MAX_SIZE) {
 
                 errors.push(
-                    file.name +
-                    ' is empty or exceeds 15 MB.'
+                    file.name + ' is empty or exceeds 15 MB.'
                 );
 
                 continue;
             }
 
-
-            /*
-            | MAXIMUM 11 FILES
-            */
-
+            // Maximum files
             if (records.length >= MAX_FILES) {
 
                 errors.push(
@@ -1023,23 +892,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 break;
             }
 
-
-            /*
-            | PREVENT DUPLICATE FILE SELECTION
-            */
-
+            // Duplicate file selection
             const exists = records.some(function (record) {
 
                 return (
-
-                    record.file.name.toLowerCase() ===
-                        file.name.toLowerCase() &&
-
+                    record.file.name === file.name &&
                     record.file.size === file.size &&
-
                     record.file.lastModified === file.lastModified
-
                 );
+
             });
 
             if (exists) {
@@ -1051,76 +912,37 @@ document.addEventListener('DOMContentLoaded', function () {
                 continue;
             }
 
-
-            /*
-            | ADD FILE TO LIST
-            */
-
             records.push({
-
                 id: nextId++,
-
                 file: file
-
             });
-        }
 
-        const synced = syncInput();
+        }
 
         renderFiles();
 
-        if (!synced) {
-
-            button.disabled = true;
-
-            errors.unshift(
-                'Unable to update the file selection. ' +
-                'Please use a modern browser.'
-            );
-        }
-
         if (errors.length > 0) {
-
             showError(errors[0]);
-
         }
+
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | FILE INPUT CHANGE
+    | INPUT CHANGE
     |--------------------------------------------------------------------------
     */
 
     input.addEventListener('change', function () {
 
-        addFiles(input.files);
+        addFiles(this.files);
+
+        // Allows choosing additional files afterward.
+        // Selected files remain in the records array.
+        this.value = '';
 
     });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | KEYBOARD ACCESSIBILITY
-    |--------------------------------------------------------------------------
-    */
-
-    dropzone.addEventListener(
-        'keydown',
-        function (event) {
-
-            if (
-                event.key === 'Enter' ||
-                event.key === ' '
-            ) {
-
-                event.preventDefault();
-
-                input.click();
-            }
-        }
-    );
 
 
     /*
@@ -1137,19 +959,17 @@ document.addEventListener('DOMContentLoaded', function () {
             'border-teal-500',
             'bg-teal-50'
         );
+
     });
 
 
-    dropzone.addEventListener('dragleave', function (event) {
-
-        if (dropzone.contains(event.relatedTarget)) {
-            return;
-        }
+    dropzone.addEventListener('dragleave', function () {
 
         dropzone.classList.remove(
             'border-teal-500',
             'bg-teal-50'
         );
+
     });
 
 
@@ -1162,7 +982,11 @@ document.addEventListener('DOMContentLoaded', function () {
             'bg-teal-50'
         );
 
-        addFiles(event.dataTransfer.files);
+        if (event.dataTransfer && event.dataTransfer.files) {
+
+            addFiles(event.dataTransfer.files);
+
+        }
 
     });
 
@@ -1175,12 +999,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderFiles() {
 
-        fileList.replaceChildren();
-
         const total = records.length;
 
-        fileCount.textContent =
-            total + ' / ' + MAX_FILES;
+        fileCount.textContent = total + ' / ' + MAX_FILES;
 
         selectionPercentage.textContent =
             total + ' / ' + MAX_FILES;
@@ -1188,134 +1009,100 @@ document.addEventListener('DOMContentLoaded', function () {
         selectionProgress.style.width =
             ((total / MAX_FILES) * 100) + '%';
 
+        selectionStatus.textContent =
+            total === 0
+                ? 'No files selected yet'
+                : total + ' Class Record(s) selected';
+
         selectedSection.classList.toggle(
             'hidden',
             total === 0
         );
 
-        selectionStatus.textContent =
-            total === 0
+        fileList.replaceChildren();
 
-                ? 'No files selected yet'
-
-                : total +
-                  ' Class Record' +
-                  (total === 1 ? '' : 's') +
-                  ' ready for generation';
-
-
-        /*
-        | ENABLE GENERATE BUTTON
-        */
-
-        button.disabled =
-            isGenerating ||
-            total < 1 ||
-            total > MAX_FILES;
-
-
-        /*
-        | CREATE FILE CARDS
-        */
 
         records.forEach(function (record, index) {
 
             const row = document.createElement('div');
 
             row.className =
-                'flex items-center justify-between gap-3 ' +
-                'rounded-xl border border-slate-200 ' +
-                'bg-white p-4 transition ' +
-                'hover:border-teal-300 hover:bg-slate-50';
+                'flex items-center gap-3 rounded-xl ' +
+                'border border-slate-200 bg-slate-50 p-4';
 
 
-            /*
-            | FILE ICON
-            */
+            const iconBox = document.createElement('div');
 
-            const fileIcon = document.createElement('div');
+            iconBox.className =
+                'flex h-10 w-10 shrink-0 items-center ' +
+                'justify-center rounded-xl bg-teal-100 ' +
+                'text-teal-700';
 
-            fileIcon.className =
-                'flex h-11 w-11 shrink-0 ' +
-                'items-center justify-center rounded-xl ' +
-                'bg-emerald-50 text-emerald-600';
+            const fileIcon = document.createElement('span');
 
-            fileIcon.innerHTML =
-                '<i data-lucide="file-spreadsheet" ' +
-                'class="h-5 w-5"></i>';
+            fileIcon.textContent = 'XLSX';
 
+            fileIcon.className = 'text-xs font-extrabold';
 
-            /*
-            | FILE DETAILS
-            */
+            iconBox.appendChild(fileIcon);
+
 
             const details = document.createElement('div');
 
             details.className = 'min-w-0 flex-1';
 
-            const filename = document.createElement('p');
 
-            filename.className =
+            const name = document.createElement('p');
+
+            name.className =
                 'break-all text-sm font-bold text-slate-800';
 
-            filename.textContent = record.file.name;
+            name.textContent = record.file.name;
 
 
-            const metadata = document.createElement('p');
+            const size = document.createElement('p');
 
-            metadata.className =
-                'mt-1 text-[11px] text-slate-500';
+            size.className = 'mt-1 text-xs text-slate-500';
 
-            metadata.textContent =
+            size.textContent =
                 'File ' + (index + 1) +
-                ' · ' + formatSize(record.file.size);
+                ' - ' + formatSize(record.file.size);
 
 
-            details.appendChild(filename);
+            details.appendChild(name);
 
-            details.appendChild(metadata);
-
-
-            /*
-            | REMOVE BUTTON
-            */
-
-            const removeButton = document.createElement('button');
-
-            removeButton.type = 'button';
-
-            removeButton.dataset.removeId = record.id;
-
-            removeButton.setAttribute(
-                'aria-label',
-                'Remove ' + record.file.name
-            );
-
-            removeButton.className =
-                'flex h-9 w-9 shrink-0 items-center ' +
-                'justify-center rounded-lg text-slate-400 ' +
-                'transition hover:bg-red-50 hover:text-red-600';
-
-            removeButton.innerHTML =
-                '<i data-lucide="x" class="h-4 w-4"></i>';
+            details.appendChild(size);
 
 
-            row.appendChild(fileIcon);
+            const remove = document.createElement('button');
+
+            remove.type = 'button';
+
+            remove.dataset.removeId = record.id;
+
+            remove.className =
+                'rounded-lg px-3 py-2 text-xs font-bold ' +
+                'text-red-600 hover:bg-red-50';
+
+            remove.textContent = 'Remove';
+
+
+            row.appendChild(iconBox);
 
             row.appendChild(details);
 
-            row.appendChild(removeButton);
+            row.appendChild(remove);
 
             fileList.appendChild(row);
+
         });
 
-        refreshIcons();
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | REMOVE INDIVIDUAL FILE
+    | REMOVE FILE
     |--------------------------------------------------------------------------
     */
 
@@ -1325,34 +1112,24 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const removeButton = event.target.closest(
+        const button = event.target.closest(
             '[data-remove-id]'
         );
 
-        if (!removeButton) {
+        if (!button) {
             return;
         }
 
-        const id = Number(
-            removeButton.dataset.removeId
-        );
+        const id = Number(button.dataset.removeId);
 
         records = records.filter(function (record) {
-
             return record.id !== id;
-
         });
 
         hideError();
 
-        if (!syncInput()) {
-
-            showError(
-                'Unable to update selected files.'
-            );
-        }
-
         renderFiles();
+
     });
 
 
@@ -1375,6 +1152,7 @@ document.addEventListener('DOMContentLoaded', function () {
         hideError();
 
         renderFiles();
+
     });
 
 
@@ -1386,15 +1164,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showProcessing() {
 
-        previousBodyOverflow =
-            document.body.style.overflow;
-
-        document.body.style.overflow = 'hidden';
-
         processingOverlay.classList.remove('hidden');
-        processingOverlay.classList.add('flex');
 
-        processingOverlay.focus();
+        processingOverlay.classList.add('flex');
 
         processingStage.textContent =
             'Uploading Class Records...';
@@ -1405,19 +1177,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'Sending your Excel files to Laravel.';
 
         processingFileCount.textContent =
-            records.length +
-            ' Class Record' +
-            (records.length === 1 ? '' : 's') +
-            ' selected';
-
-        processingDot.classList.remove(
-            'bg-emerald-500'
-        );
-
-        processingDot.classList.add(
-            'bg-teal-500',
-            'animate-pulse'
-        );
+            records.length + ' Class Record(s) selected';
 
         uploadProgressBar.style.width = '0%';
 
@@ -1425,69 +1185,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         serverProgressBar.classList.add('hidden');
 
-        processingTrack.setAttribute(
-            'aria-valuenow',
-            '0'
-        );
-
-        processingTrack.setAttribute(
-            'aria-label',
-            'Uploading Class Records'
-        );
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | UPDATE ACTUAL UPLOAD PERCENTAGE
+    | SERVER GENERATION STAGE
     |--------------------------------------------------------------------------
     */
 
-    function updateUploadProgress(percent) {
-
-        const value = Math.min(
-            100,
-            Math.max(0, Math.round(percent))
-        );
-
-        uploadProgressBar.style.width =
-            value + '%';
-
-        processingPercent.textContent =
-            value + '%';
-
-        processingStage.textContent =
-            'Uploading Class Records...';
-
-        processingDescription.textContent =
-            'Uploading ' +
-            records.length +
-            ' Excel Class Record' +
-            (records.length === 1 ? '' : 's') +
-            '. Please keep this page open.';
-
-        processingTrack.setAttribute(
-            'aria-valuenow',
-            String(value)
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | SERVER IS GENERATING EXCEL
-    |--------------------------------------------------------------------------
-    |
-    | Upload percentage is finished.
-    |
-    | Server progress cannot be measured
-    | accurately without a backend progress API.
-    |
-    | Show an animated processing bar instead.
-    |
-    */
-
-    function showServerProcessing() {
+    function showGenerating() {
 
         processingStage.textContent =
             'Generating Master Sheet...';
@@ -1496,78 +1203,20 @@ document.addEventListener('DOMContentLoaded', function () {
             'Processing';
 
         processingDescription.textContent =
-            'Upload complete. Laravel is validating ' +
-            'student names, inserting grades, and ' +
-            'building the Excel Master Sheet.';
+            'Laravel is extracting student names, ' +
+            'matching subjects, inserting grades, ' +
+            'and generating the Excel file.';
 
         uploadProgressBar.classList.add('hidden');
 
         serverProgressBar.classList.remove('hidden');
 
-        processingTrack.removeAttribute('aria-valuenow');
-
-        processingTrack.setAttribute(
-            'aria-label',
-            'Generating Master Sheet'
-        );
-
-        processingTrack.setAttribute(
-            'aria-valuetext',
-            'Processing Excel workbook'
-        );
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | GENERATION COMPLETE
-    |--------------------------------------------------------------------------
-    */
-
-    function showCompleted() {
-
-        processingStage.textContent =
-            'Master Sheet Ready!';
-
-        processingPercent.textContent =
-            '100%';
-
-        processingDescription.textContent =
-            'Your Master Sheet has been generated. ' +
-            'The Excel download is starting.';
-
-        processingDot.classList.remove(
-            'animate-pulse',
-            'bg-teal-500'
-        );
-
-        processingDot.classList.add(
-            'bg-emerald-500'
-        );
-
-        serverProgressBar.classList.add('hidden');
-
-        uploadProgressBar.classList.remove('hidden');
-
-        uploadProgressBar.style.width = '100%';
-
-        processingTrack.removeAttribute('aria-valuetext');
-
-        processingTrack.setAttribute(
-            'aria-valuenow',
-            '100'
-        );
-
-        processingTrack.setAttribute(
-            'aria-label',
-            'Master Sheet ready'
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CLOSE PROCESSING OVERLAY
+    | CLOSE OVERLAY
     |--------------------------------------------------------------------------
     */
 
@@ -1577,88 +1226,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         processingOverlay.classList.remove('flex');
 
-        document.body.style.overflow =
-            previousBodyOverflow;
-
         isGenerating = false;
+
+        generateButton.disabled = false;
 
         buttonText.textContent =
             'Generate & Download Master Sheet';
 
-        renderFiles();
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | HANDLE GENERATION FAILURE
-    |--------------------------------------------------------------------------
-    */
-
-    function generationFailed(message) {
-
-        closeProcessing();
-
-        showError(message);
-
-        errorBox.scrollIntoView({
-
-            behavior: 'smooth',
-
-            block: 'center'
-
-        });
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | GET DOWNLOAD FILENAME
-    |--------------------------------------------------------------------------
-    */
-
-    function getDownloadFilename(xhr) {
-
-        const disposition =
-            xhr.getResponseHeader('Content-Disposition') || '';
-
-        /*
-        | RFC 5987 encoded filename.
-        */
-
-        const encoded = disposition.match(
-            /filename\*=UTF-8''([^;]+)/i
-        );
-
-        if (encoded) {
-
-            try {
-
-                return decodeURIComponent(
-                    encoded[1].replace(/^"|"$/g, '')
-                );
-
-            } catch (error) {
-                // Use fallback filename.
-            }
-        }
-
-        /*
-        | Normal filename.
-        */
-
-        const normal = disposition.match(
-            /filename="([^"]+)"|filename=([^;]+)/i
-        );
-
-        if (normal) {
-
-            return (
-                normal[1] || normal[2]
-            ).trim().replace(/^"|"$/g, '');
-        }
-
-        return 'MasterSheet.xlsx';
     }
 
 
@@ -1672,33 +1246,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (xhr.status === 419) {
 
-            return 'Your session expired. ' +
-                   'Refresh the page and try again.';
+            return 'Your session expired. Refresh and try again.';
+
         }
 
         if (xhr.status === 413) {
 
-            return 'The uploaded files exceed the server ' +
-                   'upload limit. Please reduce their size.';
+            return 'Uploaded files exceed the server size limit.';
+
         }
 
         if (xhr.status === 403) {
 
-            return 'You do not have permission to ' +
-                   'generate this Master Sheet.';
+            return 'You do not have permission to generate this Master Sheet.';
+
         }
 
         try {
 
-            const raw = xhr.response
-                ? await xhr.response.text()
-                : '';
+            const text = await xhr.response.text();
 
-            const data = JSON.parse(raw);
-
-            /*
-            | Laravel validation errors.
-            */
+            const data = JSON.parse(text);
 
             if (data.errors) {
 
@@ -1708,27 +1276,65 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (messages.length > 0) {
 
                     return messages.join(' | ');
+
                 }
+
             }
 
             if (data.message) {
-
                 return data.message;
             }
 
         } catch (error) {
-
-            // Response may be an HTML error page.
+            // Non-JSON response.
         }
 
-        return 'Master Sheet generation failed. ' +
-               'Please check your Excel files and try again.';
+        return 'Master Sheet generation failed. Please check your files.';
+
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | SUBMIT FORM WITH AJAX UPLOAD PROGRESS
+    | READ DOWNLOAD FILENAME
+    |--------------------------------------------------------------------------
+    */
+
+    function getDownloadFilename(xhr) {
+
+        const disposition =
+            xhr.getResponseHeader('Content-Disposition') || '';
+
+        const encoded =
+            disposition.match(/filename\*=UTF-8''([^;]+)/i);
+
+        if (encoded) {
+
+            try {
+                return decodeURIComponent(encoded[1]);
+            } catch (error) {
+                // Use ordinary filename.
+            }
+
+        }
+
+        const normal =
+            disposition.match(/filename="([^"]+)"|filename=([^;]+)/i);
+
+        if (normal) {
+
+            return (normal[1] || normal[2]).trim();
+
+        }
+
+        return 'MasterSheet.xlsx';
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUBMIT AND GENERATE MASTER SHEET
     |--------------------------------------------------------------------------
     */
 
@@ -1743,14 +1349,30 @@ document.addEventListener('DOMContentLoaded', function () {
         hideError();
 
 
-        /*
-        | VALIDATE NUMBER OF CLASS RECORDS
-        */
+        // Validate selected grade.
+        if (!gradeSelect.value) {
 
-        if (
-            records.length < 1 ||
-            records.length > MAX_FILES
-        ) {
+            showError('Please select a grade level.');
+
+            gradeSelect.focus();
+
+            return;
+        }
+
+
+        // Validate selected semester.
+        if (!semesterSelect.value) {
+
+            showError('Please select a semester.');
+
+            semesterSelect.focus();
+
+            return;
+        }
+
+
+        // Validate file count.
+        if (records.length < 1 || records.length > MAX_FILES) {
 
             showError(
                 'Please select between 1 and 11 Class Records.'
@@ -1760,62 +1382,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
 
-        /*
-        | VALIDATE SELECTED FILES
-        */
-
-        for (const record of records) {
-
-            const file = record.file;
-
-            if (!/\.xlsx$/i.test(file.name)) {
-
-                showError(
-                    file.name + ' must be an XLSX file.'
-                );
-
-                return;
-            }
-
-            if (
-                file.size === 0 ||
-                file.size > MAX_SIZE
-            ) {
-
-                showError(
-                    file.name +
-                    ' is empty or exceeds 15 MB.'
-                );
-
-                return;
-            }
-        }
-
-
-        /*
-        | SYNCHRONIZE ACTUAL FILE INPUT
-        */
-
-        if (
-            !syncInput() ||
-            input.files.length !== records.length
-        ) {
-
-            showError(
-                'Unable to attach the selected Excel files.'
-            );
-
-            return;
-        }
-
-
-        /*
-        | LOCK FORM DURING GENERATION
-        */
-
+        // Lock submit button.
         isGenerating = true;
 
-        button.disabled = true;
+        generateButton.disabled = true;
 
         buttonText.textContent =
             'Generating Master Sheet...';
@@ -1824,22 +1394,47 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         /*
-        | PREPARE REQUEST
+        |--------------------------------------------------------------------------
+        | IMPORTANT FIX
+        |--------------------------------------------------------------------------
+        |
+        | FormData now contains:
+        | _token
+        | grade_level
+        | semester
+        |
+        | The selected Excel files are added afterward.
+        |
+        */
+
+        const formData = new FormData(form);
+
+        // Remove the file input's empty/default entry.
+        formData.delete('class_records[]');
+
+        // Add ALL selected Excel files.
+        records.forEach(function (record) {
+
+            formData.append(
+                'class_records[]',
+                record.file,
+                record.file.name
+            );
+
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEND REQUEST TO LARAVEL
+        |--------------------------------------------------------------------------
         */
 
         const xhr = new XMLHttpRequest();
 
-        const formData = new FormData(form);
+        xhr.open('POST', form.action, true);
 
-        xhr.open(
-            'POST',
-            form.action,
-            true
-        );
-
-        /*
-        | Request JSON validation errors.
-        */
+        xhr.responseType = 'blob';
 
         xhr.setRequestHeader(
             'X-Requested-With',
@@ -1851,186 +1446,114 @@ document.addEventListener('DOMContentLoaded', function () {
             'application/json'
         );
 
-        /*
-        | Receive Excel as binary data.
-        */
-
-        xhr.responseType = 'blob';
-
 
         /*
-        | TRACK REAL UPLOAD PERCENTAGE
+        |--------------------------------------------------------------------------
+        | ACTUAL FILE UPLOAD PROGRESS
+        |--------------------------------------------------------------------------
         */
 
-        xhr.upload.addEventListener(
-            'progress',
-            function (event) {
+        xhr.upload.addEventListener('progress', function (event) {
 
-                if (event.lengthComputable) {
-
-                    const percent =
-                        (event.loaded / event.total) * 100;
-
-                    updateUploadProgress(percent);
-                }
+            if (!event.lengthComputable) {
+                return;
             }
-        );
+
+            const percent = Math.min(
+                100,
+                Math.round((event.loaded / event.total) * 100)
+            );
+
+            uploadProgressBar.style.width = percent + '%';
+
+            processingPercent.textContent = percent + '%';
+
+        });
+
+
+        xhr.upload.addEventListener('load', function () {
+
+            showGenerating();
+
+        });
 
 
         /*
-        | UPLOAD FINISHED; SERVER PROCESSING
-        */
-
-        xhr.upload.addEventListener(
-            'load',
-            function () {
-
-                if (isGenerating) {
-                    showServerProcessing();
-                }
-            }
-        );
-
-
-        /*
-        | HANDLE SERVER RESPONSE
+        |--------------------------------------------------------------------------
+        | HANDLE LARAVEL RESPONSE
+        |--------------------------------------------------------------------------
         */
 
         xhr.onload = async function () {
 
-            const contentType = (
-                xhr.getResponseHeader('Content-Type') || ''
-            ).toLowerCase();
+            if (xhr.status >= 200 && xhr.status < 300) {
 
-            const disposition = (
-                xhr.getResponseHeader('Content-Disposition') || ''
-            ).toLowerCase();
-
-            const isExcel =
-                contentType.includes(
-                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                ) ||
-                (
-                    contentType.includes('application/octet-stream') &&
-                    disposition.includes('attachment')
-                );
-
-            /*
-            | SUCCESS: EXCEL RECEIVED
-            */
-
-            if (
-                xhr.status >= 200 &&
-                xhr.status < 300 &&
-                isExcel &&
-                xhr.response &&
-                xhr.response.size > 0
-            ) {
+                // Success: Laravel returned an XLSX file.
+                const filename = getDownloadFilename(xhr);
 
                 const blob = xhr.response;
 
-                const filename =
-                    getDownloadFilename(xhr);
+                const url = URL.createObjectURL(blob);
 
-                const downloadUrl =
-                    URL.createObjectURL(blob);
+                const link = document.createElement('a');
 
-                const link =
-                    document.createElement('a');
-
-                link.href = downloadUrl;
+                link.href = url;
 
                 link.download = filename;
 
                 document.body.appendChild(link);
 
-                /*
-                | START DOWNLOAD
-                */
-
                 link.click();
 
                 link.remove();
 
-                /*
-                | RELEASE BLOB URL
-                */
-
                 setTimeout(function () {
+                    URL.revokeObjectURL(url);
+                }, 5000);
 
-                    URL.revokeObjectURL(
-                        downloadUrl
-                    );
-
-                }, 60000);
-
-
-                /*
-                | SUCCESS SCREEN
-                */
-
-                showCompleted();
-
-                setTimeout(function () {
-
-                    closeProcessing();
-
-                }, 1200);
+                closeProcessing();
 
                 return;
             }
 
 
-            /*
-            | FAILURE: READ LARAVEL MESSAGE
-            */
+            // Error returned by Laravel.
+            const message = await getServerError(xhr);
 
-            const message =
-                await getServerError(xhr);
+            closeProcessing();
 
-            generationFailed(message);
+            showError(message);
+
+            fileError.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+
         };
 
-
-        /*
-        | NETWORK ERROR
-        */
 
         xhr.onerror = function () {
 
-            generationFailed(
-                'Network error while generating ' +
-                'the Master Sheet. Please try again.'
+            closeProcessing();
+
+            showError(
+                'Network error. Please check your connection and try again.'
             );
+
         };
 
-
-        /*
-        | REQUEST ABORTED
-        */
 
         xhr.onabort = function () {
 
-            generationFailed(
-                'Master Sheet generation was interrupted.'
-            );
+            closeProcessing();
+
+            showError('Upload was cancelled.');
+
         };
 
 
-        /*
-        | SEND REQUEST
-        */
-
-        try {
-
-            xhr.send(formData);
-
-        } catch (error) {
-
-            generationFailed(
-                'Unable to start the upload. Please try again.'
-            );
-        }
+        // Send the entire request.
+        xhr.send(formData);
 
     });
 

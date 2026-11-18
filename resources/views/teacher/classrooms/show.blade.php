@@ -56,18 +56,20 @@
             'archived_action' => 'View Master Sheets',
         ],
 
+        
         [
             'key' => 'cards',
             'number' => '04',
             'title' => 'Student Cards',
             'description' =>
-                'Generate individual student report cards using finalized Master Sheets.',
+                'Upload the finalized Master Class Excel file, review learners, and generate individual Student Cards automatically. One student equals one report card.',
             'icon' => 'contact-round',
-            'available' => false,
-            'route' => null,
-            'action' => null,
-            'archived_action' => null,
+            'available' => true,
+            'route' => 'teacher.classrooms.student-cards',
+            'action' => 'Generate Student Cards',
+            'archived_action' => 'View Student Cards',
         ],
+
 
         [
             'key' => 'forms',
@@ -121,7 +123,7 @@
             <i data-lucide="arrow-left"
                class="h-4 w-4"></i>
 
-            Back to My Classrooms
+            Back to My Classroom
         </a>
 
 
